@@ -1,3 +1,22 @@
+注意事项（请务必阅读）
+
+1. 调整显卡风扇转速、风扇曲线、核心/显存频率偏移、功耗上限均有风险，可能导致
+   显卡不稳定、计算任务出错、驱动崩溃或硬件损坏。请谨慎操作，风险自负。
+   显存偏移界面允许 ±6000 MHz，但驱动是否接受由具体显卡/驱动决定。
+
+2. 安装本套件后，需要在群晖 SimplePermissionManager 中授权 NVFD，套件才能通过
+   spm-exec 以 root 调用风扇/频率后端。若套件启动失败或界面报
+   "backend execution failed"，请执行：
+       sudo /var/packages/NVFD/target/tools/approve-nvfd.sh
+       sudo synopkg start NVFD
+   详见 README：
+       https://github.com/MeowPerth/nvfd-synology-spk
+
+WARNING: Adjusting GPU fans, clocks, memory offsets or power limits can make the
+GPU unstable, corrupt compute jobs, crash the driver or damage hardware. Use at
+your own risk. After installation, NVFD must be authorized in Synology
+SimplePermissionManager before the web UI can control the GPU.
+
 MIT License
 
 Copyright (c) 2026 Infinirc

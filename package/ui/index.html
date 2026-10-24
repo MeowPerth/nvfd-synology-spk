@@ -209,7 +209,7 @@ button{cursor:pointer}
     <h2>说明</h2>
     <ul>
       <li>风扇最低 30%，最高 100%。手动模式会忽略温度，但 NVFD 的 86 °C 失效保护仍会强制全速。</li>
-      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。</li>
+      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。显存界面范围 ±6000 MHz，实际是否接受由驱动决定。</li>
       <li>正偏移属于超频，可能让正在运行的计算任务出错；建议从小数值开始测试。</li>
       <li>功耗上限修改后立即生效，但重启后会恢复默认；偏移和风扇模式会保留。</li>
       <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
@@ -318,7 +318,7 @@ button{cursor:pointer}
           '</div>' +
           '<div class="sub-row">' +
             '<label>核心偏移 <input type="number" data-offset="gpc" step="5" value="0"><span>MHz</span></label>' +
-            '<label>显存偏移 <input type="number" data-offset="mem" step="5" value="0"><span>MHz</span></label>' +
+            '<label>显存偏移 <input type="number" data-offset="mem" min="-6000" max="6000" step="5" value="0"><span>MHz</span></label>' +
             '<span class="spacer"></span>' +
             '<button class="btn apply-offsets">应用</button>' +
             '<button class="btn ghost reset-offsets">归零</button>' +
