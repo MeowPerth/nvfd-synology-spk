@@ -8,6 +8,8 @@
 作者：**小H酱**
 项目地址：**https://github.com/MeowPerth/nvfd-synology-spk**
 
+**下载：** [GitHub Releases](https://github.com/MeowPerth/nvfd-synology-spk/releases/latest)
+
 ![NVFD 界面](docs/ui-preview.png)
 
 > 上图使用模拟数据渲染；实际界面会显示你的显卡温度、风扇和频率。

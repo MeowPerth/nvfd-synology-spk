@@ -29,12 +29,12 @@ chmod 644 INFO LICENSE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG \
 rm -rf package/bin/__pycache__
 
 rm -f package.tgz
-tar --sort=name --owner=0 --group=0 --numeric-owner -czf package.tgz -C package .
+tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -czf package.tgz -C package .
 
 mkdir -p dist
 SPK="dist/NVFD-$VERSION.spk"
 rm -f "$SPK"
-tar --sort=name --owner=0 --group=0 --numeric-owner -cf "$SPK" \
+tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -cf "$SPK" \
     INFO LICENSE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG conf package.tgz scripts
 
 echo "built: $ROOT/$SPK"
