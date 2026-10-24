@@ -17,19 +17,23 @@ test -f "$NVFD_CLOCKS" || { echo "missing nvfd-clocks: $NVFD_CLOCKS" >&2; exit 1
 python3 -m py_compile "$ROOT/package/bin/backend.py"
 python3 -m py_compile "$NVFD_CLOCKS"
 
-chmod 755 "$NVFD_BIN" "$NVFD_CLOCKS" \
-          package/bin/backend.py package/ui/api.cgi \
-          package/tools/*.sh tools/*.sh scripts/*.sh 2>/dev/null || true
+# Normalize modes so the SPK is reproducible across checkouts.
+find package -type d -exec chmod 755 {} +
+find package -type f -exec chmod 644 {} +
+chmod 755 package/bin/nvfd package/bin/nvfd-clocks package/bin/backend.py \
+          package/ui/api.cgi package/tools/*.sh
+chmod 755 conf scripts
+chmod 644 INFO LICENSE NOTICE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG \
+          conf/privilege package/ui/index.html package/ui/config package/ui/Main.js \
+          package/systemd/*.service package/etc/*.json
 chmod 755 scripts/preinst scripts/postinst scripts/preuninst \
           scripts/postuninst scripts/preupgrade scripts/postupgrade \
           scripts/start-stop-status
-chmod 644 INFO LICENSE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG \
-          conf/privilege package/ui/index.html package/ui/config package/ui/Main.js \
-          package/systemd/*.service package/etc/*.json
 rm -rf package/bin/__pycache__
 
 rm -f package.tgz
 tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -czf package.tgz -C package .
+chmod 644 package.tgz
 
 mkdir -p dist
 SPK="dist/NVFD-$VERSION.spk"
