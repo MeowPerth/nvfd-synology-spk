@@ -12,8 +12,6 @@ import os
 import sys
 
 CONFIG = "/etc/nvfd/clocks.json"
-MEM_OFFSET_MIN = -6000
-MEM_OFFSET_MAX = 6000
 
 NVML_SUCCESS = 0
 NVML_CLOCK_SM = 1
@@ -191,14 +189,9 @@ def save_config(data):
 def apply_offsets(nv, index, gpc, mem):
     d = nv.handle(index)
     for kind, value in (("Gpc", gpc), ("Mem", mem)):
-        if kind == "Mem":
-            if not (MEM_OFFSET_MIN <= value <= MEM_OFFSET_MAX):
-                die("GPU %d MEM offset %d out of range [%d, %d]" %
-                    (index, value, MEM_OFFSET_MIN, MEM_OFFSET_MAX))
-            continue
         rng = nv.offset_range(d, kind)
-        if rng and not (rng[0] <= value <= rng[1]):
-            die("GPU %d %s offset %d out of range [%d, %d]" %
+        if rng[0] is not None and not (rng[0] <= value <= rng[1]):
+            die("GPU %d %s offset %d out of driver range [%d, %d]" %
                 (index, kind, value, rng[0], rng[1]))
     nv.set_offset(d, "Gpc", gpc)
     nv.set_offset(d, "Mem", mem)

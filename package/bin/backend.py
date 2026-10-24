@@ -26,8 +26,6 @@ NVML_SUCCESS = 0
 NVML_CLOCK_SM = 1
 NVML_CLOCK_MEM = 2
 DEFAULT_CURVE = {"30": 30, "40": 40, "50": 55, "60": 65, "70": 85, "80": 100}
-MEM_OFFSET_MIN = -6000
-MEM_OFFSET_MAX = 6000
 
 ENV = dict(os.environ)
 ENV["PATH"] = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -229,6 +227,8 @@ def status(nv):
             centry = {}
         gpc_off = nv.offset(d, "Gpc")
         mem_off = nv.offset(d, "Mem")
+        gpc_range = nv.offset_range(d, "Gpc")
+        mem_range = nv.offset_range(d, "Mem")
         gpus.append({
             "index": i,
             "name": nv.name(d),
@@ -249,9 +249,10 @@ def status(nv):
             "mem_offset_mhz": None if mem_off is None else int(round(mem_off / 2.0)),
             "gpc_saved": centry.get("gpc", 0),
             "mem_saved": centry.get("mem", 0),
-            "gpc_range": nv.offset_range(d, "Gpc"),
-            "mem_range": [MEM_OFFSET_MIN, MEM_OFFSET_MAX],
-            "mem_range_mhz": [MEM_OFFSET_MIN // 2, MEM_OFFSET_MAX // 2],
+            "gpc_range": gpc_range,
+            "mem_range": mem_range,
+            "mem_range_mhz": [None, None] if mem_range[0] is None else
+                             [int(round(mem_range[0] / 2.0)), int(round(mem_range[1] / 2.0))],
             "mode": entry.get("mode", "auto"),
             "manual_speed": entry.get("speed"),
         })
@@ -358,10 +359,11 @@ def set_offsets(nv, target, gpc, mem):
     for i in indexes:
         d = nv.handle(i)
         gr = nv.offset_range(d, "Gpc")
+        mr = nv.offset_range(d, "Mem")
         if gr[0] is not None and not (gr[0] <= gpc <= gr[1]):
-            raise RuntimeError("GPU %d 核心偏移超出范围 %d..%d" % (i, gr[0], gr[1]))
-        if not (MEM_OFFSET_MIN <= mem <= MEM_OFFSET_MAX):
-            raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d MT/s" % (i, MEM_OFFSET_MIN, MEM_OFFSET_MAX))
+            raise RuntimeError("GPU %d 核心偏移超出范围 %d..%d MHz" % (i, gr[0], gr[1]))
+        if mr[0] is not None and not (mr[0] <= mem <= mr[1]):
+            raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d MT/s" % (i, mr[0], mr[1]))
     if not os.path.exists(CLOCKS_BIN):
         raise RuntimeError("找不到 nvfd-clocks: %s" % CLOCKS_BIN)
     rc, msg = run([CLOCKS_BIN, "set", target, str(gpc), str(mem)])
