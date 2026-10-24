@@ -13,6 +13,8 @@ NVFD_BIN=${NVFD_BIN:-$ROOT/package/bin/nvfd}
 NVFD_CLOCKS=${NVFD_CLOCKS:-$ROOT/package/bin/nvfd-clocks}
 test -x "$NVFD_BIN" || { echo "missing executable nvfd: $NVFD_BIN" >&2; exit 1; }
 test -f "$NVFD_CLOCKS" || { echo "missing nvfd-clocks: $NVFD_CLOCKS" >&2; exit 1; }
+[ "$NVFD_BIN" = "$ROOT/package/bin/nvfd" ] || install -m 755 "$NVFD_BIN" package/bin/nvfd
+[ "$NVFD_CLOCKS" = "$ROOT/package/bin/nvfd-clocks" ] || install -m 755 "$NVFD_CLOCKS" package/bin/nvfd-clocks
 
 python3 -m py_compile "$ROOT/package/bin/backend.py"
 python3 -m py_compile "$NVFD_CLOCKS"
