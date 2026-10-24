@@ -219,7 +219,8 @@ def cmd_status(nv, argv):
         print("GPU %d: %s" % (i, nv.name(d)))
         print("  temp       : %s C" % temp)
         print("  clocks     : SM %s MHz, MEM %s MHz" % (sm, mem))
-        print("  offsets    : GPC %+d MHz, MEM %+d MHz" % (gpc, moff))
+        print("  offsets    : GPC %+d MHz, MEM %+d MT/s (~ %+d MHz)" %
+              (gpc, moff, int(round(moff / 2.0)) if moff is not None else 0))
         if power is not None and limit is not None:
             print("  power      : %.1f / %.1f W" % (power / 1000.0, limit / 1000.0))
         if fans is not None:
@@ -242,7 +243,8 @@ def cmd_set(nv, argv):
     for i in indexes:
         apply_offsets(nv, i, gpc, mem)
         data["gpu%d" % i] = {"gpc": gpc, "mem": mem}
-        print("GPU %d: GPC %+d MHz, MEM %+d MHz applied" % (i, gpc, mem))
+        print("GPU %d: GPC %+d MHz, MEM %+d MT/s (~ %+d MHz) applied" %
+              (i, gpc, mem, int(round(mem / 2.0))))
     save_config(data)
     print("saved to %s" % CONFIG)
     return 0
@@ -278,7 +280,8 @@ def cmd_apply(nv, argv):
         gpc = int(entry.get("gpc", 0))
         mem = int(entry.get("mem", 0))
         apply_offsets(nv, i, gpc, mem)
-        print("GPU %d: GPC %+d MHz, MEM %+d MHz applied" % (i, gpc, mem))
+        print("GPU %d: GPC %+d MHz, MEM %+d MT/s (~ %+d MHz) applied" %
+              (i, gpc, mem, int(round(mem / 2.0))))
     return 0
 
 
@@ -286,14 +289,14 @@ def usage():
     print("""usage:
   nvfd-clocks status [gpu|all]       show clocks, offsets, fans, power
   nvfd-clocks set <gpu|all> <gpc> <mem>
-                                     apply and save GPC/MEM offsets in MHz
+                                     apply and save GPC offset (MHz) and MEM offset (MT/s)
   nvfd-clocks reset [gpu|all]        set offsets to 0 and save
   nvfd-clocks apply                  apply offsets saved in %s
 
 Examples:
   sudo nvfd-clocks status
   sudo nvfd-clocks set all -50 0     underclock core by 50 MHz, memory stock
-  sudo nvfd-clocks set 0 100 200     GPU 0: core +100 MHz, memory +200 MHz
+  sudo nvfd-clocks set 0 100 200     GPU 0: core +100 MHz, memory +200 MT/s (~+100 MHz)
   sudo nvfd-clocks reset             back to stock offsets
 
 Offsets are volatile until 'apply' is run at boot (or nvfd.service is

@@ -133,6 +133,7 @@ button{cursor:pointer}
 .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 .foot a{color:var(--accent);text-decoration:none}
 .foot a:hover{text-decoration:underline}
+.offset-hint{font-size:10px;color:var(--muted);white-space:nowrap}
 .toast{
   position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
   background:#0f2537;border:1px solid #1e6a8a;color:#e0f2fe;padding:9px 15px;
@@ -209,7 +210,8 @@ button{cursor:pointer}
     <h2>说明</h2>
     <ul>
       <li>风扇最低 30%，最高 100%。手动模式会忽略温度，但 NVFD 的 86 °C 失效保护仍会强制全速。</li>
-      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。显存界面范围 ±6000 MHz，实际是否接受由驱动决定。</li>
+      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。</li>
+      <li><b>显存偏移单位是 MT/s</b>（等效频率），实际时钟变化约为一半。例如 -1600 MT/s ≈ -800 MHz；界面范围 ±6000 MT/s，实际是否接受由驱动决定。</li>
       <li>正偏移属于超频，可能让正在运行的计算任务出错；建议从小数值开始测试。</li>
       <li>功耗上限修改后立即生效，但重启后会恢复默认；偏移和风扇模式会保留。</li>
       <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
@@ -318,7 +320,8 @@ button{cursor:pointer}
           '</div>' +
           '<div class="sub-row">' +
             '<label>核心偏移 <input type="number" data-offset="gpc" step="5" value="0"><span>MHz</span></label>' +
-            '<label>显存偏移 <input type="number" data-offset="mem" min="-6000" max="6000" step="5" value="0"><span>MHz</span></label>' +
+            '<label>显存偏移 <input type="number" data-offset="mem" min="-6000" max="6000" step="5" value="0"><span>MT/s</span></label>' +
+            '<span class="offset-hint mem-hint">≈ +0 MHz 实际</span>' +
             '<span class="spacer"></span>' +
             '<button class="btn apply-offsets">应用</button>' +
             '<button class="btn ghost reset-offsets">归零</button>' +
@@ -382,7 +385,10 @@ button{cursor:pointer}
       if (document.activeElement !== gpc) gpc.value = g.gpc_offset == null ? 0 : g.gpc_offset;
       if (document.activeElement !== mem) mem.value = g.mem_offset == null ? 0 : g.mem_offset;
       gpc.title = g.gpc_range && g.gpc_range[0] != null ? ("允许 " + g.gpc_range[0] + " ~ " + g.gpc_range[1] + " MHz") : "";
-      mem.title = g.mem_range && g.mem_range[0] != null ? ("允许 " + g.mem_range[0] + " ~ " + g.mem_range[1] + " MHz") : "";
+      var memHint = $(".mem-hint", card);
+      var memActual = g.mem_offset_mhz != null ? g.mem_offset_mhz : (g.mem_offset == null ? 0 : Math.round(g.mem_offset / 2));
+      if (memHint) memHint.textContent = "≈ " + (memActual > 0 ? "+" : "") + memActual + " MHz 实际";
+      mem.title = "显存偏移单位 MT/s；实际时钟约一半。允许 -6000 ~ 6000 MT/s，实际支持范围由驱动决定";
 
       var power = $("input[data-power]", card);
       if (document.activeElement !== power && g.power_limit != null) {
@@ -593,6 +599,12 @@ button{cursor:pointer}
     if (ev.target.matches('input[type="range"]')) {
       var card = ev.target.closest(".gpu-card");
       $(".manual-val", card).textContent = ev.target.value + "%";
+    }
+    if (ev.target.matches('input[data-offset="mem"]')) {
+      var card = ev.target.closest(".gpu-card");
+      var v = parseInt(ev.target.value, 10);
+      var hint = $(".mem-hint", card);
+      if (hint && !isNaN(v)) hint.textContent = "≈ " + (v > 0 ? "+" : "") + Math.round(v / 2) + " MHz 实际";
     }
   });
 

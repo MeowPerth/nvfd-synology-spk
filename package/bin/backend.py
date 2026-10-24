@@ -227,6 +227,8 @@ def status(nv):
         centry = clocks.get("gpu%d" % i, {})
         if not isinstance(centry, dict):
             centry = {}
+        gpc_off = nv.offset(d, "Gpc")
+        mem_off = nv.offset(d, "Mem")
         gpus.append({
             "index": i,
             "name": nv.name(d),
@@ -242,12 +244,14 @@ def status(nv):
             "fan_targets": target,
             "fan_min": fmin,
             "fan_max": fmax,
-            "gpc_offset": nv.offset(d, "Gpc"),
-            "mem_offset": nv.offset(d, "Mem"),
+            "gpc_offset": gpc_off,
+            "mem_offset": mem_off,
+            "mem_offset_mhz": None if mem_off is None else int(round(mem_off / 2.0)),
             "gpc_saved": centry.get("gpc", 0),
             "mem_saved": centry.get("mem", 0),
             "gpc_range": nv.offset_range(d, "Gpc"),
             "mem_range": [MEM_OFFSET_MIN, MEM_OFFSET_MAX],
+            "mem_range_mhz": [MEM_OFFSET_MIN // 2, MEM_OFFSET_MAX // 2],
             "mode": entry.get("mode", "auto"),
             "manual_speed": entry.get("speed"),
         })
@@ -357,7 +361,7 @@ def set_offsets(nv, target, gpc, mem):
         if gr[0] is not None and not (gr[0] <= gpc <= gr[1]):
             raise RuntimeError("GPU %d 核心偏移超出范围 %d..%d" % (i, gr[0], gr[1]))
         if not (MEM_OFFSET_MIN <= mem <= MEM_OFFSET_MAX):
-            raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d" % (i, MEM_OFFSET_MIN, MEM_OFFSET_MAX))
+            raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d MT/s" % (i, MEM_OFFSET_MIN, MEM_OFFSET_MAX))
     if not os.path.exists(CLOCKS_BIN):
         raise RuntimeError("找不到 nvfd-clocks: %s" % CLOCKS_BIN)
     rc, msg = run([CLOCKS_BIN, "set", target, str(gpc), str(mem)])
