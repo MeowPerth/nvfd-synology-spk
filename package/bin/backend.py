@@ -349,13 +349,16 @@ def set_curve(points_text):
     return {"ok": True, "curve": curve, "message": "曲线已保存，约 5 秒内生效"}
 
 
-def set_offsets(nv, target, gpc, mem):
+def set_offsets(nv, target, gpc, mem, mem_mhz=None):
     indexes = require_target(nv, target)
     try:
         gpc = int(gpc)
-        mem = int(mem)
+        if mem_mhz is not None:
+            mem = int(mem_mhz) * 2
+        else:
+            mem = int(mem)
     except (TypeError, ValueError):
-        raise RuntimeError("偏移必须是整数 MHz")
+        raise RuntimeError("偏移必须是整数")
     for i in indexes:
         d = nv.handle(i)
         gr = nv.offset_range(d, "Gpc")
@@ -363,6 +366,9 @@ def set_offsets(nv, target, gpc, mem):
         if gr[0] is not None and not (gr[0] <= gpc <= gr[1]):
             raise RuntimeError("GPU %d 核心偏移超出范围 %d..%d MHz" % (i, gr[0], gr[1]))
         if mr[0] is not None and not (mr[0] <= mem <= mr[1]):
+            if mem_mhz is not None:
+                raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d MHz" %
+                                   (i, int(round(mr[0] / 2.0)), int(round(mr[1] / 2.0))))
             raise RuntimeError("GPU %d 显存偏移超出范围 %d..%d MT/s" % (i, mr[0], mr[1]))
     if not os.path.exists(CLOCKS_BIN):
         raise RuntimeError("找不到 nvfd-clocks: %s" % CLOCKS_BIN)
@@ -433,7 +439,8 @@ def handle_query(qs):
         elif action == "setcurve":
             result = set_curve(one("points", ""))
         elif action == "setoffsets":
-            result = set_offsets(nv, one("target", "all"), one("gpc", "0"), one("mem", "0"))
+            result = set_offsets(nv, one("target", "all"), one("gpc", "0"),
+                                 one("mem", "0"), one("mem_mhz"))
         elif action == "resetoffsets":
             result = reset_offsets(one("target", "all"))
         elif action == "setpower":
