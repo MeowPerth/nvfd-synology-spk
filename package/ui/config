@@ -1,8 +1,8 @@
 {
-    "Main.js": {
+    "Main-0015.js": {
         "SYNO.SDS.NVFD.Instance": {
             "type": "app",
-            "version": "1.0.0-0014",
+            "version": "1.0.0-0015",
             "desc": "NVFD 显卡风扇、频率与功耗控制 · 小H酱",
             "icon": "images/icon_{0}.png",
             "title": "NVFD 显卡控制",

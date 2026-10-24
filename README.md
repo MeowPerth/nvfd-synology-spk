@@ -47,13 +47,19 @@
 
 ## 安装
 
-1. 从 [dist/NVFD-1.0.0-0014.spk](dist/NVFD-1.0.0-0014.spk) 下载 SPK。
+1. 从 [dist/NVFD-1.0.0-0015.spk](dist/NVFD-1.0.0-0015.spk) 下载 SPK。
 2. DSM **套件中心 → 手动安装**，选择这个文件。
 3. 本地自制包没有 Synology 官方签名；若提示“来源不受信任”，选择继续/允许。
 4. 安装后如果按钮是“启动”，点 **启动**。
 5. 从 **DSM 主菜单 → NVFD 显卡控制**，或 **套件中心 → NVFD → 打开**。
 
 如果主菜单没有立即出现图标，刷新 DSM 页面或重新登录。
+
+### 升级后界面没有变化
+
+关闭 NVFD 窗口，刷新 DSM 页面（Windows/Linux 用 `Ctrl+F5`，macOS 用
+`Cmd+Shift+R`），再重新打开。1.0.0-0015 起使用版本化的 `Main-0015.js` 和
+`index.html?v=...`，正常刷新后会加载新界面；界面页脚会显示版本号。
 
 ## 重要：SimplePermissionManager 授权
 
@@ -148,7 +154,7 @@ sudo synopkg uninstall NVFD
 输出：
 
 ```text
-dist/NVFD-1.0.0-0014.spk
+dist/NVFD-1.0.0-0015.spk
 ```
 
 `build.sh` 需要 `python3` 和 GNU tar；不需要在 NAS 上安装编译器。
