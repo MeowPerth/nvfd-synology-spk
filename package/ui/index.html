@@ -134,12 +134,10 @@ button{cursor:pointer}
 .foot{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
 .foot a{color:var(--accent);text-decoration:none}
 .foot a:hover{text-decoration:underline}
-.offset-hint{font-size:10px;color:var(--muted);white-space:nowrap}
 .sub-row.offset-row{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:center}
 .sub-row.offset-row label{min-width:0}
-.sub-row.offset-row .offset-hint{grid-column:1 / -1;grid-row:2}
-.sub-row.offset-row .apply-offsets{grid-column:1;grid-row:3;justify-self:center;min-width:120px}
-.sub-row.offset-row .reset-offsets{grid-column:2;grid-row:3;justify-self:center;min-width:120px}
+.sub-row.offset-row .apply-offsets{grid-column:1;grid-row:2;justify-self:center;min-width:120px}
+.sub-row.offset-row .reset-offsets{grid-column:2;grid-row:2;justify-self:center;min-width:120px}
 .toast{
   position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
   background:#0f2537;border:1px solid #1e6a8a;color:#e0f2fe;padding:9px 15px;
@@ -223,7 +221,7 @@ button{cursor:pointer}
       <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
     </ul>
   </section>
-  <footer class="foot">NVFD 显卡控制 · v1.0.0-0015 · by 小H酱 · <a href="https://github.com/MeowPerth/nvfd-synology-spk" target="_blank" rel="noopener">GitHub</a></footer>
+  <footer class="foot">NVFD 显卡控制 · v1.0.0-0016 · by 小H酱 · <a href="https://github.com/MeowPerth/nvfd-synology-spk" target="_blank" rel="noopener">GitHub</a></footer>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -327,7 +325,6 @@ button{cursor:pointer}
           '<div class="sub-row offset-row">' +
             '<label>核心偏移 <input type="number" data-offset="gpc" step="5" value="0"><span>MHz</span></label>' +
             '<label>显存偏移 <input type="number" data-offset="mem" step="5" value="0"><span>MHz</span></label>' +
-            '<span class="offset-hint mem-hint">驱动范围 --</span>' +
             '<button class="btn apply-offsets">应用</button>' +
             '<button class="btn ghost reset-offsets">归零</button>' +
           '</div>' +
@@ -393,13 +390,9 @@ button{cursor:pointer}
         gpc.min = g.gpc_range[0]; gpc.max = g.gpc_range[1];
         gpc.title = "驱动范围 " + g.gpc_range[0] + " ~ " + g.gpc_range[1] + " MHz";
       }
-      var memHint = $(".mem-hint", card);
       if (g.mem_range_mhz && g.mem_range_mhz[0] != null) {
         mem.min = g.mem_range_mhz[0]; mem.max = g.mem_range_mhz[1];
         mem.title = "驱动范围 " + g.mem_range_mhz[0] + " ~ " + g.mem_range_mhz[1] + " MHz（内部换算为 MT/s）";
-        if (memHint) memHint.textContent = "驱动范围 " + g.mem_range_mhz[0] + " ~ " + g.mem_range_mhz[1] + " MHz";
-      } else if (memHint) {
-        memHint.textContent = "驱动范围 --";
       }
 
       var power = $("input[data-power]", card);
