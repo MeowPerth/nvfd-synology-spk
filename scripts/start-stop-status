@@ -1,0 +1,60 @@
+#!/bin/sh
+SPM=/usr/local/bin/spm-exec
+PKG=/var/packages/NVFD/target
+run() {
+    if [ -x "$SPM" ]; then
+        "$SPM" /bin/systemctl "$@"
+    else
+        /bin/systemctl "$@"
+    fi
+}
+
+# A fresh install may run before SimplePermissionManager has approved NVFD.
+# After the admin approves it, "synopkg start NVFD" repairs the unit/config.
+ensure() {
+    [ -f /etc/systemd/system/nvfd.service ] && [ -f /etc/nvfd/config.json ] && return 0
+    [ -x "$SPM" ] || return 1
+    "$SPM" /bin/sh -c '
+        set -e
+        PKG=/var/packages/NVFD/target
+        mkdir -p /etc/nvfd
+        [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
+        [ -f /etc/nvfd/curve.json ] || cp "$PKG/etc/default_curve.json" /etc/nvfd/curve.json
+        [ -f /etc/nvfd/clocks.json ] || cp "$PKG/etc/default_clocks.json" /etc/nvfd/clocks.json
+        chmod 644 /etc/nvfd/config.json /etc/nvfd/curve.json /etc/nvfd/clocks.json
+        install -m 644 "$PKG/systemd/nvfd.service" /etc/systemd/system/nvfd.service
+        systemctl daemon-reload
+    '
+}
+
+case "$1" in
+    start)
+        ensure || exit 1
+        run enable nvfd >/dev/null 2>&1
+        run start nvfd
+        ;;
+    stop)
+        run stop nvfd
+        run disable nvfd >/dev/null 2>&1
+        ;;
+    status)
+        run is-active nvfd >/dev/null 2>&1
+        ;;
+    restart)
+        ensure || exit 1
+        run restart nvfd
+        ;;
+    killall)
+        run stop nvfd
+        ;;
+    log)
+        if [ -x "$SPM" ]; then
+            "$SPM" /bin/journalctl -u nvfd -n 100 --no-pager
+        else
+            /bin/journalctl -u nvfd -n 100 --no-pager
+        fi
+        ;;
+    *)
+        exit 0
+        ;;
+esac

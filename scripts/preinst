@@ -1,0 +1,11 @@
+#!/bin/sh
+# Package scripts run as the NVFD package user.  NVFD is approved in DSM's
+# SimplePermissionManager, so spm-exec can perform the privileged steps.
+SPM=/usr/local/bin/spm-exec
+if [ -x "$SPM" ]; then
+    "$SPM" /bin/sh -c '
+        systemctl stop nvfd >/dev/null 2>&1 || true
+        systemctl disable nvfd >/dev/null 2>&1 || true
+    ' >/dev/null 2>&1 || true
+fi
+exit 0

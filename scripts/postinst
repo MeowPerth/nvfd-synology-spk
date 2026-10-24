@@ -1,0 +1,26 @@
+#!/bin/sh
+SPM=/usr/local/bin/spm-exec
+if [ ! -x "$SPM" ]; then
+    echo "spm-exec not found; cannot install NVFD service" >&2
+    exit 0
+fi
+
+"$SPM" /bin/sh -c '
+    set -e
+    PKG=/var/packages/NVFD/target
+    mkdir -p /etc/nvfd
+    [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
+    [ -f /etc/nvfd/curve.json ] || cp "$PKG/etc/default_curve.json" /etc/nvfd/curve.json
+    [ -f /etc/nvfd/clocks.json ] || cp "$PKG/etc/default_clocks.json" /etc/nvfd/clocks.json
+    chmod 644 /etc/nvfd/config.json /etc/nvfd/curve.json /etc/nvfd/clocks.json
+    install -m 644 "$PKG/systemd/nvfd.service" /etc/systemd/system/nvfd.service
+    systemctl daemon-reload
+'
+rc=$?
+if [ $rc -ne 0 ]; then
+    echo "NVFD service unit failed to install." >&2
+    echo "Approve it and retry:" >&2
+    echo "  sudo /var/packages/NVFD/target/tools/approve-nvfd.sh" >&2
+    echo "  sudo synopkg start NVFD" >&2
+fi
+exit 0

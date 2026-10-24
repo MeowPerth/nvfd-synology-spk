@@ -1,0 +1,3 @@
+#!/bin/sh
+# User configuration in /etc/nvfd is intentionally preserved on uninstall.
+exit 0

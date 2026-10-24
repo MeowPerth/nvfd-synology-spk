@@ -1,0 +1,18 @@
+#!/bin/sh
+SPM=/usr/local/bin/spm-exec
+if [ ! -x "$SPM" ]; then
+    exit 0
+fi
+
+"$SPM" /bin/sh -c '
+    set -e
+    PKG=/var/packages/NVFD/target
+    mkdir -p /etc/nvfd
+    [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
+    [ -f /etc/nvfd/curve.json ] || cp "$PKG/etc/default_curve.json" /etc/nvfd/curve.json
+    [ -f /etc/nvfd/clocks.json ] || cp "$PKG/etc/default_clocks.json" /etc/nvfd/clocks.json
+    chmod 644 /etc/nvfd/config.json /etc/nvfd/curve.json /etc/nvfd/clocks.json
+    install -m 644 "$PKG/systemd/nvfd.service" /etc/systemd/system/nvfd.service
+    systemctl daemon-reload
+'
+exit 0

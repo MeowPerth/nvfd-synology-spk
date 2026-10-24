@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVFD 显卡控制</title>
+<style>
+:root{
+  --bg:#0b1220;--panel:#111c2e;--panel2:#16243a;--line:#24364f;
+  --text:#e6eefc;--muted:#8aa0bd;--accent:#38bdf8;--accent2:#0ea5e9;
+  --green:#34d399;--orange:#f59e0b;--red:#f87171;--purple:#a78bfa;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%}
+body{
+  background:radial-gradient(1200px 600px at 10% -10%,#12304f 0,transparent 55%),
+             radial-gradient(900px 500px at 100% 0,#1b1b3a 0,transparent 50%),var(--bg);
+  color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
+  "Noto Sans SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+.hdr{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;
+  justify-content:space-between;gap:16px;padding:12px 22px;
+  background:rgba(11,18,32,.86);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#0c4a6e,#0f172a);border:1px solid #1e6a8a;
+  box-shadow:0 0 24px rgba(56,189,248,.18);
+}
+.brand h1{font-size:17px;letter-spacing:.3px}
+.brand p{font-size:12px;color:var(--muted)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
+  font-size:12px;border:1px solid var(--line);color:var(--muted);background:var(--panel);
+}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.badge.ok{color:var(--green);border-color:#14533f;background:#0c2a22}
+.badge.ok .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.badge.bad{color:var(--red);border-color:#5b2020;background:#2a0f12}
+.badge.bad .dot{background:var(--red)}
+.btn{
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);
+  padding:7px 12px;border-radius:9px;transition:.15s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--accent);color:#fff}
+.btn.primary{background:linear-gradient(135deg,#0284c7,#0ea5e9);border-color:#38bdf8;color:#fff}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.btn.danger{color:#fecaca;border-color:#5b2020;background:#2a0f12}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.main{max-width:1280px;margin:0 auto;padding:18px 22px 40px}
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-bottom:14px;flex-wrap:wrap;
+}
+.toolbar .group{display:flex;gap:8px;flex-wrap:wrap}
+.alert{
+  display:none;margin-bottom:14px;padding:10px 13px;border-radius:10px;
+  border:1px solid #5b3a12;background:#2a1c09;color:#fcd34d;font-size:13px;
+}
+.alert.show{display:block}
+.alert.danger{border-color:#5b2020;background:#2a0f12;color:#fecaca}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{
+  background:linear-gradient(160deg,rgba(22,36,58,.96),rgba(15,26,43,.96));
+  border:1px solid var(--line);border-radius:14px;padding:15px;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.gpu-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.gpu-head h2{font-size:16px;display:flex;align-items:center;gap:7px}
+.gpu-head .name{font-size:12px;color:var(--muted);margin-top:2px}
+.mode-badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.mode-badge.curve{color:var(--purple);border-color:#4c3a78;background:#211a35}
+.mode-badge.manual{color:var(--accent);border-color:#0e5e7a;background:#082a38}
+.mode-badge.auto{color:var(--green);border-color:#14533f;background:#0c2a22}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0 12px}
+.metric{background:rgba(9,16,28,.55);border:1px solid rgba(36,54,79,.8);border-radius:10px;padding:8px 9px}
+.metric span{display:block;font-size:11px;color:var(--muted)}
+.metric strong{display:block;font-size:19px;font-weight:650;margin-top:1px}
+.metric strong em{font-style:normal;font-size:11px;color:var(--muted);font-weight:500;margin-left:2px}
+.fan-block{margin:6px 0 10px}
+.fan-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
+.fan-label b{color:var(--text);font-size:13px}
+.fan-label em{font-style:normal;color:var(--muted);font-size:11px;margin-left:5px}
+.fan-bar{position:relative;height:9px;border-radius:999px;background:#0a1424;overflow:hidden;border:1px solid #1c2c44}
+.fan-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22d3ee);transition:width .35s ease}
+.fan-target{position:absolute;top:-3px;bottom:-3px;width:2px;background:#e2e8f0;opacity:.8}
+.fan-channels{font-size:11px;color:var(--muted);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap}
+.fan-channels .zero{color:var(--orange)}
+.segmented{display:flex;gap:6px;background:#0a1424;border:1px solid var(--line);padding:4px;border-radius:10px}
+.segmented button{
+  flex:1;border:0;background:transparent;color:var(--muted);padding:7px 6px;border-radius:7px;font-size:12px;
+}
+.segmented button:hover{color:var(--text)}
+.segmented button.active{background:var(--panel2);color:#fff;box-shadow:0 0 0 1px #2c4a6b inset}
+.manual-row{display:none;align-items:center;gap:9px;margin-top:9px}
+.manual-row.show{display:flex}
+.manual-row input[type=range]{flex:1;accent-color:var(--accent)}
+.manual-val{font-variant-numeric:tabular-nums;min-width:42px;text-align:right;color:var(--accent);font-weight:650}
+.sub-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(36,54,79,.65)}
+.sub-row label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
+.sub-row input[type=number]{
+  width:76px;padding:5px 7px;border-radius:7px;border:1px solid var(--line);
+  background:#0a1424;color:var(--text);font-variant-numeric:tabular-nums;
+}
+.sub-row input[type=number]:focus{outline:none;border-color:var(--accent)}
+.sub-row .spacer{flex:1}
+.curve-card{margin-top:14px}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.section-head h2{font-size:15px}
+.section-head .group{display:flex;gap:8px;flex-wrap:wrap}
+.curve-wrap{background:#091322;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px}
+#curveChart{width:100%;height:220px;display:block}
+.curve-editor{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+
+.curve-item{display:flex;align-items:center;gap:6px;background:#0a1424;border:1px solid var(--line);border-radius:9px;padding:6px 7px}
+.curve-item input{width:58px;padding:4px 5px;border-radius:6px;border:1px solid var(--line);background:#07101d;color:var(--text);text-align:right}
+.curve-item .unit{font-size:11px;color:var(--muted)}
+.curve-item .del{border:0;background:transparent;color:var(--muted);padding:2px 4px;font-size:16px}
+.curve-item .del:hover{color:var(--red)}
+.note{font-size:12px;color:var(--muted);margin-top:9px}
+.notes{margin-top:14px}
+.notes h2{font-size:15px;margin-bottom:7px}
+.notes ul{padding-left:18px;color:var(--muted);font-size:12.5px}
+.notes li{margin:4px 0}
+.notes code{background:#0a1424;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#bae6fd}
+.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
+.foot a{color:var(--accent);text-decoration:none}
+.foot a:hover{text-decoration:underline}
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+  background:#0f2537;border:1px solid #1e6a8a;color:#e0f2fe;padding:9px 15px;
+  border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;
+  pointer-events:none;transition:.22s;z-index:50;max-width:80vw;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{border-color:#7f1d1d;background:#2a0f12;color:#fecaca}
+.warn-text{color:var(--orange);font-size:11px}
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .hdr{padding:10px 14px}
+  .main{padding:14px}
+  .brand p{display:none}
+}
+</style>
+</head>
+<body>
+<header class="hdr">
+  <div class="brand">
+    <div class="logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.7" stroke-linecap="round">
+        <rect x="4" y="5" width="16" height="14" rx="3"/>
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 8.2c1.8 0 3 1.4 3 2.8M12 15.8c-1.8 0-3-1.4-3-2.8M8.2 12c0-1.8 1.4-3 2.8-3M15.8 12c0 1.8-1.4 3-2.8 3"/>
+        <path d="M7 2v3M17 2v3M7 19v3M17 19v3"/>
+      </svg>
+    </div>
+    <div>
+      <h1>NVFD 显卡控制</h1>
+      <p>NVIDIA 风扇、核心/显存偏移与功耗 · by 小H酱</p>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <span class="badge" id="serviceBadge"><i class="dot"></i><span id="serviceText">检查中</span></span>
+    <button class="btn" id="refreshBtn">刷新</button>
+  </div>
+</header>
+
+<main class="main">
+  <div class="alert" id="alertBox"></div>
+
+  <div class="toolbar">
+    <div class="group">
+      <button class="btn" data-allmode="auto">全部自动</button>
+      <button class="btn" data-allmode="curve">全部曲线</button>
+      <button class="btn ghost" id="restartBtn">重启风扇服务</button>
+    </div>
+    <div class="group">
+      <span class="badge" id="lastUpdate"><i class="dot"></i>等待数据</span>
+    </div>
+  </div>
+
+  <div class="grid" id="gpuGrid"></div>
+
+  <section class="card curve-card">
+    <div class="section-head">
+      <h2>风扇曲线</h2>
+      <div class="group">
+        <button class="btn ghost" id="addPointBtn">添加点</button>
+        <button class="btn" id="saveCurveBtn">保存曲线</button>
+        <button class="btn primary" id="saveCurveAllBtn">保存并全部使用</button>
+      </div>
+    </div>
+    <div class="curve-wrap">
+      <svg id="curveChart" viewBox="0 0 640 220" preserveAspectRatio="none" aria-label="风扇曲线图"></svg>
+    </div>
+    <div class="curve-editor" id="curveEditor"></div>
+    <p class="note">曲线必须随温度升高不下降。保存后 NVFD 约 5 秒内生效；只有“曲线”模式的 GPU 会使用它。</p>
+  </section>
+
+  <section class="card notes">
+    <h2>说明</h2>
+    <ul>
+      <li>风扇最低 30%，最高 100%。手动模式会忽略温度，但 NVFD 的 86 °C 失效保护仍会强制全速。</li>
+      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。</li>
+      <li>正偏移属于超频，可能让正在运行的计算任务出错；建议从小数值开始测试。</li>
+      <li>功耗上限修改后立即生效，但重启后会恢复默认；偏移和风扇模式会保留。</li>
+      <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
+    </ul>
+  </section>
+  <footer class="foot">NVFD 显卡控制 · by 小H酱 · <a href="https://github.com/MeowPerth/nvfd-synology-spk" target="_blank" rel="noopener">GitHub</a></footer>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var state = {
+    gpus: [],
+    curve: {},
+    curveDirty: false,
+    curveLoaded: false,
+    busy: false,
+    cardsBuilt: false,
+    pollTimer: null
+  };
+
+  var $ = function (sel, root) { return (root || document).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function toast(msg, isErr) {
+    var el = $("#toast");
+    el.textContent = msg;
+    el.className = "toast show" + (isErr ? " err" : "");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.className = "toast"; }, 3200);
+  }
+
+  function api(action, params, method) {
+    params = params || {};
+    method = method || "GET";
+    var q = new URLSearchParams();
+    q.set("action", action);
+    Object.keys(params).forEach(function (k) {
+      if (params[k] !== undefined && params[k] !== null) q.set(k, params[k]);
+    });
+    var opts = { method: method, cache: "no-store", headers: {} };
+    if (method === "POST") opts.headers["X-NVFD"] = "1";
+    return fetch("api.cgi?" + q.toString(), opts).then(function (r) {
+      return r.text().then(function (text) {
+        var data;
+        try { data = JSON.parse(text); }
+        catch (e) { throw new Error("接口返回异常: " + text.slice(0, 180)); }
+        if (!data.ok) throw new Error(data.error || "操作失败");
+        return data;
+      });
+    });
+  }
+
+  function modeLabel(mode) {
+    return mode === "curve" ? "曲线" : mode === "manual" ? "手动" : "自动";
+  }
+
+  function num(v, digits) {
+    if (v === null || v === undefined) return "--";
+    return digits ? Number(v).toFixed(digits) : String(v);
+  }
+
+  function fanBar(pct) {
+    pct = Math.max(0, Math.min(100, Number(pct) || 0));
+    return pct;
+  }
+
+  function buildCards(gpus) {
+    var grid = $("#gpuGrid");
+    grid.innerHTML = gpus.map(function (g) {
+      return '' +
+        '<article class="card gpu-card" data-index="' + g.index + '">' +
+          '<div class="gpu-head">' +
+            '<div><h2>GPU ' + g.index + '</h2><div class="name">' + esc(g.name) + '</div></div>' +
+            '<span class="mode-badge auto">自动</span>' +
+          '</div>' +
+          '<div class="metrics">' +
+            '<div class="metric"><span>温度</span><strong class="m-temp">--<em>°C</em></strong></div>' +
+            '<div class="metric"><span>功耗</span><strong class="m-power">--<em>W</em></strong></div>' +
+            '<div class="metric"><span>核心</span><strong class="m-sm">--<em>MHz</em></strong></div>' +
+            '<div class="metric"><span>显存</span><strong class="m-mem">--<em>MHz</em></strong></div>' +
+          '</div>' +
+          '<div class="fan-block">' +
+            '<div class="fan-label"><span>风扇</span><span><b class="f-now">--%</b><em class="f-target">目标 --%</em></span></div>' +
+            '<div class="fan-bar"><div class="fan-fill" style="width:0%"></div><div class="fan-target" style="left:0%"></div></div>' +
+            '<div class="fan-channels">--</div>' +
+          '</div>' +
+          '<div class="segmented">' +
+            '<button data-mode="auto">自动</button>' +
+            '<button data-mode="curve">曲线</button>' +
+            '<button data-mode="manual">手动</button>' +
+          '</div>' +
+          '<div class="manual-row">' +
+            '<input type="range" min="30" max="100" step="1" value="60">' +
+            '<span class="manual-val">60%</span>' +
+            '<button class="btn primary apply-manual">应用</button>' +
+          '</div>' +
+          '<div class="sub-row">' +
+            '<label>核心偏移 <input type="number" data-offset="gpc" step="5" value="0"><span>MHz</span></label>' +
+            '<label>显存偏移 <input type="number" data-offset="mem" step="5" value="0"><span>MHz</span></label>' +
+            '<span class="spacer"></span>' +
+            '<button class="btn apply-offsets">应用</button>' +
+            '<button class="btn ghost reset-offsets">归零</button>' +
+          '</div>' +
+          '<div class="sub-row">' +
+            '<label>功耗上限 <input type="number" data-power step="5" value="230"><span>W</span></label>' +
+            '<button class="btn apply-power">应用</button>' +
+            '<span class="warn-text">重启后恢复默认</span>' +
+          '</div>' +
+        '</article>';
+    }).join("");
+    state.cardsBuilt = true;
+  }
+
+  function updateCards(gpus) {
+    gpus.forEach(function (g) {
+      var card = $('.gpu-card[data-index="' + g.index + '"]');
+      if (!card) return;
+      var fans = g.fans || [];
+      var targets = g.fan_targets || [];
+      var maxActual = fans.reduce(function (a, b) { return Math.max(a, Number(b) || 0); }, 0);
+      var maxTarget = targets.reduce(function (a, b) { return Math.max(a, Number(b) || 0); }, 0);
+
+      $(".m-temp", card).innerHTML = num(g.temp) + "<em>°C</em>";
+      $(".m-power", card).innerHTML = num(g.power == null ? null : (g.power / 1000).toFixed(1)) +
+        "<em>/ " + num(g.power_limit == null ? null : (g.power_limit / 1000).toFixed(0)) + " W</em>";
+      $(".m-sm", card).innerHTML = num(g.sm_clock) + "<em>MHz</em>";
+      $(".m-mem", card).innerHTML = num(g.mem_clock) + "<em>MHz</em>";
+
+      var badge = $(".mode-badge", card);
+      badge.className = "mode-badge " + (g.mode || "auto");
+      badge.textContent = modeLabel(g.mode);
+
+      $(".f-now", card).textContent = maxActual + "%";
+      $(".f-target", card).textContent = "目标 " + maxTarget + "%";
+      $(".fan-fill", card).style.width = fanBar(maxActual) + "%";
+      $(".fan-target", card).style.left = fanBar(maxTarget) + "%";
+
+      var channels = fans.map(function (v, i) {
+        var t = targets[i];
+        return '<span class="' + (Number(v) === 0 && Number(t) > 0 ? "zero" : "") + '">Fan' + i +
+          " " + (v == null ? "?" : v) + "%" + (t != null ? " / 目标 " + t + "%" : "") + "</span>";
+      }).join("");
+      $(".fan-channels", card).innerHTML = channels || "无风扇数据";
+
+      $$(".segmented button", card).forEach(function (b) {
+        b.classList.toggle("active", b.getAttribute("data-mode") === (g.mode || "auto"));
+      });
+
+      var manual = $(".manual-row", card);
+      manual.classList.toggle("show", g.mode === "manual");
+      var range = $('input[type="range"]', manual);
+      if (document.activeElement !== range) {
+        var val = g.manual_speed == null ? 60 : g.manual_speed;
+        range.value = val;
+        $(".manual-val", manual).textContent = val + "%";
+      }
+
+      var gpc = $('input[data-offset="gpc"]', card);
+      var mem = $('input[data-offset="mem"]', card);
+      if (document.activeElement !== gpc) gpc.value = g.gpc_offset == null ? 0 : g.gpc_offset;
+      if (document.activeElement !== mem) mem.value = g.mem_offset == null ? 0 : g.mem_offset;
+      gpc.title = g.gpc_range && g.gpc_range[0] != null ? ("允许 " + g.gpc_range[0] + " ~ " + g.gpc_range[1] + " MHz") : "";
+      mem.title = g.mem_range && g.mem_range[0] != null ? ("允许 " + g.mem_range[0] + " ~ " + g.mem_range[1] + " MHz") : "";
+
+      var power = $("input[data-power]", card);
+      if (document.activeElement !== power && g.power_limit != null) {
+        power.value = Math.round(g.power_limit / 1000);
+      }
+      if (g.power_min != null) power.min = Math.floor(g.power_min / 1000);
+      if (g.power_max != null) power.max = Math.ceil(g.power_max / 1000);
+    });
+  }
+
+  function updateAlert(gpus, service) {
+    var box = $("#alertBox");
+    var msgs = [];
+    var danger = false;
+    if (service !== "active") {
+      msgs.push("NVFD 服务当前不是运行状态（" + service + "），风扇/曲线可能没有生效。");
+      danger = true;
+    }
+    gpus.forEach(function (g) {
+      var fans = g.fans || [];
+      var targets = g.fan_targets || [];
+      var dead = fans.map(function (v, i) {
+        return (Number(v) === 0 && Number(targets[i]) > 0) ? ("Fan" + i) : null;
+      }).filter(Boolean);
+      if (dead.length) {
+        msgs.push("GPU " + g.index + " 的 " + dead.join("、") +
+          " 目标 " + Math.max.apply(null, targets) + "% 但实际 0%，可能是风扇未接/测速线未接/损坏。");
+      }
+      if (g.temp != null && g.temp >= 80) {
+        msgs.push("GPU " + g.index + " 温度 " + g.temp + " °C，请立即检查散热。");
+        danger = true;
+      }
+    });
+    if (msgs.length) {
+      box.textContent = msgs.join(" ");
+      box.className = "alert show" + (danger ? " danger" : "");
+    } else {
+      box.className = "alert";
+    }
+  }
+
+  function updateService(service) {
+    var b = $("#serviceBadge");
+    var t = $("#serviceText");
+    var ok = service === "active";
+    b.className = "badge " + (ok ? "ok" : "bad");
+    t.textContent = ok ? "风扇服务运行中" : ("服务: " + service);
+  }
+
+  function renderCurveTable(curve) {
+    var editor = $("#curveEditor");
+    var points = Object.keys(curve || {}).map(function (k) {
+      return { t: parseInt(k, 10), s: parseInt(curve[k], 10) };
+    }).filter(function (p) { return !isNaN(p.t) && !isNaN(p.s); });
+    points.sort(function (a, b) { return a.t - b.t; });
+    if (!points.length) points = [{t:30,s:30},{t:40,s:40},{t:50,s:55},{t:60,s:65},{t:70,s:85},{t:80,s:100}];
+    editor.innerHTML = points.map(function (p) {
+      return '<div class="curve-item">' +
+        '<input type="number" data-temp min="0" max="100" step="1" value="' + p.t + '"><span class="unit">°C</span>' +
+        '<input type="number" data-speed min="0" max="100" step="1" value="' + p.s + '"><span class="unit">%</span>' +
+        '<button class="del" title="删除">×</button></div>';
+    }).join("");
+    drawCurve();
+  }
+
+  function readCurveRows() {
+    return $$(".curve-item", $("#curveEditor")).map(function (row) {
+      return {
+        t: parseInt($("input[data-temp]", row).value, 10),
+        s: parseInt($("input[data-speed]", row).value, 10)
+      };
+    }).filter(function (p) { return !isNaN(p.t) && !isNaN(p.s); });
+  }
+
+  function drawCurve() {
+    var rows = readCurveRows();
+    if (!rows.length) return;
+    rows.sort(function (a, b) { return a.t - b.t; });
+    var W = 640, H = 220, L = 44, R = 14, T = 14, B = 30;
+    var x = function (t) { return L + (Math.max(0, Math.min(100, t)) / 100) * (W - L - R); };
+    var y = function (s) { return H - B - (Math.max(0, Math.min(100, s)) / 100) * (H - T - B); };
+    var svg = [];
+    svg.push('<rect x="' + L + '" y="' + T + '" width="' + (W-L-R) + '" height="' + (H-T-B) + '" fill="#0b1626" stroke="#1c2c44"/>');
+    for (var i = 0; i <= 4; i++) {
+      var gy = T + i * (H - T - B) / 4;
+      svg.push('<line x1="' + L + '" y1="' + gy + '" x2="' + (W-R) + '" y2="' + gy + '" stroke="#17263b" stroke-width="1"/>');
+      svg.push('<text x="' + (L-7) + '" y="' + (gy+4) + '" fill="#7d93b2" font-size="10" text-anchor="end">' + (100 - i*25) + '%</text>');
+    }
+    for (var j = 0; j <= 5; j++) {
+      var gx = L + j * (W - L - R) / 5;
+      svg.push('<line x1="' + gx + '" y1="' + T + '" x2="' + gx + '" y2="' + (H-B) + '" stroke="#17263b" stroke-width="1"/>');
+      svg.push('<text x="' + gx + '" y="' + (H-8) + '" fill="#7d93b2" font-size="10" text-anchor="middle">' + (j*20) + '°C</text>');
+    }
+    var pts = rows.map(function (p) { return x(p.t) + "," + y(p.s); }).join(" ");
+    svg.push('<polyline points="' + pts + '" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');
+    rows.forEach(function (p) {
+      svg.push('<circle cx="' + x(p.t) + '" cy="' + y(p.s) + '" r="4" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/>');
+    });
+    $("#curveChart").innerHTML = svg.join("");
+  }
+
+  function markCurveDirty() {
+    state.curveDirty = true;
+    drawCurve();
+  }
+
+  function collectCurve() {
+    var rows = readCurveRows();
+    if (rows.length < 2) throw new Error("至少需要两个曲线点");
+    rows.sort(function (a, b) { return a.t - b.t; });
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].t < 0 || rows[i].t > 100 || rows[i].s < 0 || rows[i].s > 100)
+        throw new Error("曲线温度和转速必须在 0-100 之间");
+      if (i && rows[i].t === rows[i-1].t) throw new Error("不能有两个相同温度的点");
+      if (i && rows[i].s < rows[i-1].s) throw new Error("风扇转速必须随温度升高而不下降");
+    }
+    return rows.map(function (p) { return p.t + ":" + p.s; }).join(",");
+  }
+
+  function refresh(forceCurve, ignoreBusy) {
+    if (state.busy && !ignoreBusy) return Promise.resolve();
+    return api("status").then(function (data) {
+      state.gpus = data.gpus || [];
+      if (!state.cardsBuilt) buildCards(state.gpus);
+      updateCards(state.gpus);
+      updateService(data.service);
+      updateAlert(state.gpus, data.service);
+      if (!state.curveDirty && (forceCurve || !state.curveLoaded)) {
+        state.curve = data.curve || {};
+        renderCurveTable(state.curve);
+        state.curveLoaded = true;
+      }
+      $("#lastUpdate").innerHTML = '<i class="dot"></i>' + new Date().toLocaleTimeString("zh-CN", {hour12:false});
+    }).catch(function (e) {
+      updateService("error");
+      var box = $("#alertBox");
+      box.textContent = "读取状态失败: " + e.message;
+      box.className = "alert show danger";
+    });
+  }
+
+  function action(promise, okMsg) {
+    if (state.busy) return;
+    state.busy = true;
+    $$(".btn, .segmented button").forEach(function (b) { b.disabled = true; });
+    promise.then(function (res) {
+      toast(okMsg || res.message || "已应用");
+      state.busy = false;
+      return refresh(false, true);
+    }).catch(function (e) {
+      toast(e.message, true);
+    }).finally(function () {
+      state.busy = false;
+      $$(".btn, .segmented button").forEach(function (b) { b.disabled = false; });
+    });
+  }
+
+  $("#refreshBtn").addEventListener("click", function () { refresh(true, true); });
+
+  $("#restartBtn").addEventListener("click", function () {
+    if (!confirm("重启 NVFD 服务会让风扇短暂交回驱动控制，确定继续？")) return;
+    action(api("restart", {}, "POST"), "服务已重启");
+  });
+
+  $$("[data-allmode]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      action(api("setmode", {target:"all", mode:b.getAttribute("data-allmode")}, "POST"), "已应用到全部 GPU");
+    });
+  });
+
+  $("#gpuGrid").addEventListener("click", function (ev) {
+    var card = ev.target.closest(".gpu-card");
+    if (!card) return;
+    var idx = card.getAttribute("data-index");
+    if (ev.target.matches("[data-mode]")) {
+      var mode = ev.target.getAttribute("data-mode");
+      var p = {target: idx, mode: mode};
+      if (mode === "manual") {
+        var r = $('input[type="range"]', card);
+        p.speed = r.value;
+      }
+      action(api("setmode", p, "POST"), "GPU " + idx + " 已切换为" + modeLabel(mode));
+      return;
+    }
+    if (ev.target.matches(".apply-manual")) {
+      var r2 = $('input[type="range"]', card);
+      action(api("setmode", {target: idx, mode: "manual", speed: r2.value}, "POST"), "GPU " + idx + " 手动转速 " + r2.value + "%");
+      return;
+    }
+    if (ev.target.matches(".apply-offsets")) {
+      var g = $('input[data-offset="gpc"]', card).value;
+      var m = $('input[data-offset="mem"]', card).value;
+      action(api("setoffsets", {target: idx, gpc: g, mem: m}, "POST"), "GPU " + idx + " 偏移已应用");
+      return;
+    }
+    if (ev.target.matches(".reset-offsets")) {
+      action(api("resetoffsets", {target: idx}, "POST"), "GPU " + idx + " 偏移已归零");
+      return;
+    }
+    if (ev.target.matches(".apply-power")) {
+      var w = $('input[data-power]', card).value;
+      action(api("setpower", {target: idx, watts: w}, "POST"), "GPU " + idx + " 功耗上限已设置");
+      return;
+    }
+  });
+
+  $("#gpuGrid").addEventListener("input", function (ev) {
+    if (ev.target.matches('input[type="range"]')) {
+      var card = ev.target.closest(".gpu-card");
+      $(".manual-val", card).textContent = ev.target.value + "%";
+    }
+  });
+
+  $("#curveEditor").addEventListener("input", function (ev) {
+    if (ev.target.matches("input[data-temp],input[data-speed]")) markCurveDirty();
+  });
+
+  $("#curveEditor").addEventListener("click", function (ev) {
+    if (!ev.target.matches(".del")) return;
+    if ($$(".curve-item", $("#curveEditor")).length <= 2) {
+      toast("至少保留两个曲线点", true);
+      return;
+    }
+    ev.target.closest(".curve-item").remove();
+    markCurveDirty();
+  });
+
+  $("#addPointBtn").addEventListener("click", function () {
+    var rows = readCurveRows();
+    rows.sort(function (a, b) { return a.t - b.t; });
+    var last = rows[rows.length - 1] || {t:30, s:30};
+    var t = Math.min(95, (last.t || 0) + 5);
+    var s = Math.min(100, Math.max(30, (last.s || 30) + 5));
+    if (rows.some(function (p) { return p.t === t; })) t = Math.min(99, t + 1);
+    rows.push({t:t, s:s});
+    renderCurveTable(Object.fromEntries(rows.map(function (p) { return [String(p.t), p.s]; })));
+    markCurveDirty();
+  });
+
+  function saveCurve(applyAll) {
+    var points;
+    try { points = collectCurve(); }
+    catch (e) { toast(e.message, true); return; }
+    var p = api("setcurve", {points: points}, "POST");
+    if (applyAll) {
+      p = p.then(function () { return api("setmode", {target:"all", mode:"curve"}, "POST"); });
+    }
+    state.curveDirty = false;
+    action(p, applyAll ? "曲线已保存，全部 GPU 使用曲线" : "曲线已保存");
+  }
+
+  $("#saveCurveBtn").addEventListener("click", function () { saveCurve(false); });
+  $("#saveCurveAllBtn").addEventListener("click", function () { saveCurve(true); });
+
+  refresh(true);
+  state.pollTimer = setInterval(function () {
+    if (!document.hidden) refresh(false);
+  }, 3000);
+})();
+</script>
+</body>
+</html>

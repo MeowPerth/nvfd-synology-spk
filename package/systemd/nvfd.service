@@ -1,0 +1,21 @@
+[Unit]
+Description=NVFD - NVIDIA GPU Fan Control
+After=local-fs.target
+
+[Service]
+Type=notify
+# The NVIDIA driver may finish loading after multi-user.target on DSM; wait
+# for its control node instead of failing the first start and giving up.
+ExecStartPre=/bin/sh -c 'i=0; while [ ! -e /dev/nvidiactl ] && [ $i -lt 60 ]; do i=$((i+1)); sleep 2; done; test -e /dev/nvidiactl'
+ExecStartPre=/var/packages/NVFD/target/bin/nvfd-clocks apply
+ExecStart=/var/packages/NVFD/target/bin/nvfd
+TimeoutStartSec=180
+WatchdogSec=30
+Restart=on-failure
+RestartSec=5
+StartLimitInterval=60
+StartLimitBurst=5
+ExecStopPost=-/var/packages/NVFD/target/bin/nvfd reset-fans
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,8 @@
+{
+    "gpu0": {
+        "mode": "curve"
+    },
+    "gpu1": {
+        "mode": "curve"
+    }
+}

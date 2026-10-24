@@ -1,0 +1,326 @@
+#!/usr/bin/env python3
+"""Adjust NVIDIA GPU core/memory clock offsets on Synology DSM.
+
+Uses NVML directly, so it works headless and does not need nvidia-settings or
+an X server.  Offsets are saved in /etc/nvfd/clocks.json and can be re-applied
+at boot with:  nvfd-clocks apply
+"""
+
+import ctypes
+import json
+import os
+import sys
+
+CONFIG = "/etc/nvfd/clocks.json"
+
+NVML_SUCCESS = 0
+NVML_CLOCK_SM = 1
+NVML_CLOCK_MEM = 2
+
+
+class NVML:
+    def __init__(self):
+        self.lib = ctypes.CDLL("libnvidia-ml.so.1")
+        L = self.lib
+        L.nvmlInit_v2.restype = ctypes.c_int
+        L.nvmlShutdown.restype = ctypes.c_int
+        L.nvmlErrorString.restype = ctypes.c_char_p
+        L.nvmlErrorString.argtypes = [ctypes.c_int]
+        L.nvmlDeviceGetCount_v2.argtypes = [ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetHandleByIndex_v2.argtypes = [
+            ctypes.c_uint, ctypes.POINTER(ctypes.c_void_p)]
+        L.nvmlDeviceGetName.argtypes = [
+            ctypes.c_void_p, ctypes.c_char_p, ctypes.c_uint]
+        L.nvmlDeviceGetTemperature.argtypes = [
+            ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetPowerUsage.argtypes = [
+            ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetEnforcedPowerLimit.argtypes = [
+            ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetPowerManagementDefaultLimit.argtypes = [
+            ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetClockInfo.argtypes = [
+            ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetNumFans.argtypes = [
+            ctypes.c_void_p, ctypes.POINTER(ctypes.c_uint)]
+        L.nvmlDeviceGetFanSpeed_v2.argtypes = [
+            ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_uint)]
+        for name in ("nvmlDeviceGetGpcClkVfOffset",
+                     "nvmlDeviceGetMemClkVfOffset"):
+            fn = getattr(L, name)
+            fn.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_int)]
+            fn.restype = ctypes.c_int
+        for name in ("nvmlDeviceSetGpcClkVfOffset",
+                     "nvmlDeviceSetMemClkVfOffset"):
+            fn = getattr(L, name)
+            fn.argtypes = [ctypes.c_void_p, ctypes.c_int]
+            fn.restype = ctypes.c_int
+        for name in ("nvmlDeviceGetGpcClkMinMaxVfOffset",
+                     "nvmlDeviceGetMemClkMinMaxVfOffset"):
+            fn = getattr(L, name)
+            fn.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_int),
+                           ctypes.POINTER(ctypes.c_int)]
+            fn.restype = ctypes.c_int
+        r = L.nvmlInit_v2()
+        if r != NVML_SUCCESS:
+            raise RuntimeError("NVML init failed: %s" % self.err(r))
+        n = ctypes.c_uint()
+        r = L.nvmlDeviceGetCount_v2(ctypes.byref(n))
+        if r != NVML_SUCCESS:
+            raise RuntimeError("NVML device count failed: %s" % self.err(r))
+        self.count = n.value
+
+    def err(self, r):
+        return self.lib.nvmlErrorString(r).decode("utf-8", "replace")
+
+    def handle(self, index):
+        d = ctypes.c_void_p()
+        r = self.lib.nvmlDeviceGetHandleByIndex_v2(index, ctypes.byref(d))
+        if r != NVML_SUCCESS:
+            raise RuntimeError("GPU %d handle failed: %s" % (index, self.err(r)))
+        return d
+
+    def name(self, d):
+        buf = ctypes.create_string_buffer(96)
+        r = self.lib.nvmlDeviceGetName(d, buf, 96)
+        return buf.value.decode("utf-8", "replace") if r == NVML_SUCCESS else "Unknown"
+
+    def uint(self, fn, d):
+        v = ctypes.c_uint()
+        r = fn(d, ctypes.byref(v))
+        if r != NVML_SUCCESS:
+            return None
+        return v.value
+
+    def offset(self, d, kind):
+        v = ctypes.c_int()
+        r = getattr(self.lib, "nvmlDeviceGet%sClkVfOffset" % kind)(
+            d, ctypes.byref(v))
+        if r != NVML_SUCCESS:
+            raise RuntimeError("%s offset read failed: %s" % (kind, self.err(r)))
+        return v.value
+
+    def set_offset(self, d, kind, value):
+        r = getattr(self.lib, "nvmlDeviceSet%sClkVfOffset" % kind)(d, value)
+        if r != NVML_SUCCESS:
+            raise RuntimeError("%s offset set to %d failed: %s" %
+                               (kind, value, self.err(r)))
+
+    def offset_range(self, d, kind):
+        lo = ctypes.c_int()
+        hi = ctypes.c_int()
+        r = getattr(self.lib, "nvmlDeviceGet%sClkMinMaxVfOffset" % kind)(
+            d, ctypes.byref(lo), ctypes.byref(hi))
+        if r != NVML_SUCCESS:
+            return None
+        return lo.value, hi.value
+
+    def clocks(self, d):
+        sm = ctypes.c_uint()
+        mem = ctypes.c_uint()
+        rs = self.lib.nvmlDeviceGetClockInfo(d, NVML_CLOCK_SM, ctypes.byref(sm))
+        rm = self.lib.nvmlDeviceGetClockInfo(d, NVML_CLOCK_MEM, ctypes.byref(mem))
+        return (sm.value if rs == NVML_SUCCESS else None,
+                mem.value if rm == NVML_SUCCESS else None)
+
+    def temperature(self, d):
+        t = ctypes.c_uint()
+        r = self.lib.nvmlDeviceGetTemperature(d, 0, ctypes.byref(t))
+        return t.value if r == NVML_SUCCESS else None
+
+    def fans(self, d):
+        n = ctypes.c_uint()
+        r = self.lib.nvmlDeviceGetNumFans(d, ctypes.byref(n))
+        if r != NVML_SUCCESS:
+            return None
+        out = []
+        for i in range(n.value):
+            v = ctypes.c_uint()
+            rr = self.lib.nvmlDeviceGetFanSpeed_v2(d, i, ctypes.byref(v))
+            out.append(v.value if rr == NVML_SUCCESS else None)
+        return out
+
+    def shutdown(self):
+        self.lib.nvmlShutdown()
+
+
+def die(msg):
+    print("nvfd-clocks: %s" % msg, file=sys.stderr)
+    sys.exit(1)
+
+
+def need_root():
+    if os.geteuid() != 0:
+        die("this command must be run as root (use sudo)")
+
+
+def gpu_list(nv, arg):
+    if arg == "all":
+        return list(range(nv.count))
+    try:
+        i = int(arg)
+    except ValueError:
+        die("GPU must be a number or 'all'")
+    if i < 0 or i >= nv.count:
+        die("GPU %d does not exist (found %d GPUs)" % (i, nv.count))
+    return [i]
+
+
+def load_config():
+    try:
+        with open(CONFIG, "r") as f:
+            data = json.load(f)
+    except FileNotFoundError:
+        return {}
+    except (OSError, ValueError) as e:
+        die("cannot read %s: %s" % (CONFIG, e))
+    return data if isinstance(data, dict) else {}
+
+
+def save_config(data):
+    os.makedirs(os.path.dirname(CONFIG), exist_ok=True)
+    tmp = CONFIG + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+        f.write("\n")
+    os.replace(tmp, CONFIG)
+
+
+def apply_offsets(nv, index, gpc, mem):
+    d = nv.handle(index)
+    for kind, value in (("Gpc", gpc), ("Mem", mem)):
+        rng = nv.offset_range(d, kind)
+        if rng and not (rng[0] <= value <= rng[1]):
+            die("GPU %d %s offset %d out of range [%d, %d]" %
+                (index, kind, value, rng[0], rng[1]))
+    nv.set_offset(d, "Gpc", gpc)
+    nv.set_offset(d, "Mem", mem)
+    return d
+
+
+def cmd_status(nv, argv):
+    indexes = gpu_list(nv, argv[0]) if argv else list(range(nv.count))
+    for i in indexes:
+        d = nv.handle(i)
+        sm, mem = nv.clocks(d)
+        fans = nv.fans(d)
+        gpc = nv.offset(d, "Gpc")
+        moff = nv.offset(d, "Mem")
+        temp = nv.temperature(d)
+        power = nv.uint(nv.lib.nvmlDeviceGetPowerUsage, d)
+        limit = nv.uint(nv.lib.nvmlDeviceGetEnforcedPowerLimit, d)
+        print("GPU %d: %s" % (i, nv.name(d)))
+        print("  temp       : %s C" % temp)
+        print("  clocks     : SM %s MHz, MEM %s MHz" % (sm, mem))
+        print("  offsets    : GPC %+d MHz, MEM %+d MHz" % (gpc, moff))
+        if power is not None and limit is not None:
+            print("  power      : %.1f / %.1f W" % (power / 1000.0, limit / 1000.0))
+        if fans is not None:
+            print("  fans       : %s" % ", ".join(
+                "%d%%" % f if f is not None else "?" for f in fans))
+    return 0
+
+
+def cmd_set(nv, argv):
+    need_root()
+    if len(argv) != 3:
+        die("usage: nvfd-clocks set <gpu|all> <gpc_offset_mhz> <mem_offset_mhz>")
+    indexes = gpu_list(nv, argv[0])
+    try:
+        gpc = int(argv[1])
+        mem = int(argv[2])
+    except ValueError:
+        die("offsets must be integers (MHz)")
+    data = load_config()
+    for i in indexes:
+        apply_offsets(nv, i, gpc, mem)
+        data["gpu%d" % i] = {"gpc": gpc, "mem": mem}
+        print("GPU %d: GPC %+d MHz, MEM %+d MHz applied" % (i, gpc, mem))
+    save_config(data)
+    print("saved to %s" % CONFIG)
+    return 0
+
+
+def cmd_reset(nv, argv):
+    need_root()
+    if len(argv) > 1:
+        die("usage: nvfd-clocks reset [gpu|all]")
+    indexes = gpu_list(nv, argv[0]) if argv else list(range(nv.count))
+    data = load_config()
+    for i in indexes:
+        apply_offsets(nv, i, 0, 0)
+        data["gpu%d" % i] = {"gpc": 0, "mem": 0}
+        print("GPU %d: offsets reset to 0" % i)
+    save_config(data)
+    return 0
+
+
+def cmd_apply(nv, argv):
+    need_root()
+    if not os.path.exists(CONFIG):
+        print("no %s; nothing to apply" % CONFIG)
+        return 0
+    data = load_config()
+    if not data:
+        print("%s is empty; nothing to apply" % CONFIG)
+        return 0
+    for i in range(nv.count):
+        entry = data.get("gpu%d" % i)
+        if not isinstance(entry, dict):
+            continue
+        gpc = int(entry.get("gpc", 0))
+        mem = int(entry.get("mem", 0))
+        apply_offsets(nv, i, gpc, mem)
+        print("GPU %d: GPC %+d MHz, MEM %+d MHz applied" % (i, gpc, mem))
+    return 0
+
+
+def usage():
+    print("""usage:
+  nvfd-clocks status [gpu|all]       show clocks, offsets, fans, power
+  nvfd-clocks set <gpu|all> <gpc> <mem>
+                                     apply and save GPC/MEM offsets in MHz
+  nvfd-clocks reset [gpu|all]        set offsets to 0 and save
+  nvfd-clocks apply                  apply offsets saved in %s
+
+Examples:
+  sudo nvfd-clocks status
+  sudo nvfd-clocks set all -50 0     underclock core by 50 MHz, memory stock
+  sudo nvfd-clocks set 0 100 200     GPU 0: core +100 MHz, memory +200 MHz
+  sudo nvfd-clocks reset             back to stock offsets
+
+Offsets are volatile until 'apply' is run at boot (or nvfd.service is
+configured to run it).  Positive offsets overclock the card; test stability.
+""" % CONFIG)
+    return 0
+
+
+def main():
+    if len(sys.argv) < 2:
+        return usage()
+    cmd = sys.argv[1]
+    if cmd in ("-h", "--help", "help"):
+        return usage()
+    try:
+        nv = NVML()
+    except Exception as e:
+        die(str(e))
+    try:
+        if cmd == "status":
+            return cmd_status(nv, sys.argv[2:])
+        if cmd == "set":
+            return cmd_set(nv, sys.argv[2:])
+        if cmd == "reset":
+            return cmd_reset(nv, sys.argv[2:])
+        if cmd == "apply":
+            return cmd_apply(nv, sys.argv[2:])
+        usage()
+        return 1
+    except Exception as e:
+        die(str(e))
+    finally:
+        nv.shutdown()
+
+
+if __name__ == "__main__":
+    sys.exit(main())

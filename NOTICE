@@ -1,0 +1,18 @@
+NVFD Synology SPK
+================
+
+Packaging, DSM web UI, CGI backend and systemd integration:
+Copyright (c) 2026 小H酱
+
+The `package/bin/nvfd` binary is built from the MIT-licensed project
+"NVFD - NVIDIA Fan Daemon" by Infinirc:
+
+    https://github.com/infinirc/nvfd
+
+The upstream copyright and license text is preserved in LICENSE.
+
+`package/ui` is original work for this package, except for the DSM AppWindow
+integration pattern (Ext.define / SYNO.SDS.AppWindow), which follows the
+public Synology DSM package developer documentation.
+
+This package is not affiliated with Synology Inc. or NVIDIA Corporation.

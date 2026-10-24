@@ -1,0 +1,7 @@
+package.tgz
+package/bin/__pycache__/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+permissions.json.bak.nvfd
