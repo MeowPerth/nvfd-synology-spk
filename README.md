@@ -47,7 +47,7 @@
 
 ## 安装
 
-1. 从 [dist/NVFD-1.0.0-0016.spk](dist/NVFD-1.0.0-0016.spk) 下载 SPK。
+1. 从 [dist/NVFD-1.0.0-0017.spk](dist/NVFD-1.0.0-0017.spk) 下载 SPK。
 2. DSM **套件中心 → 手动安装**，选择这个文件。
 3. 本地自制包没有 Synology 官方签名；若提示“来源不受信任”，选择继续/允许。
 4. 安装后如果按钮是“启动”，点 **启动**。
@@ -58,7 +58,7 @@
 ### 升级后界面没有变化
 
 关闭 NVFD 窗口，刷新 DSM 页面（Windows/Linux 用 `Ctrl+F5`，macOS 用
-`Cmd+Shift+R`），再重新打开。1.0.0-0016 起使用版本化的 `Main-0015.js` 和
+`Cmd+Shift+R`），再重新打开。1.0.0-0017 起使用版本化的 `Main-0015.js` 和
 `index.html?v=...`，正常刷新后会加载新界面；界面页脚会显示版本号。
 
 ## 重要：SimplePermissionManager 授权
@@ -143,6 +143,13 @@ sudo synopkg uninstall NVFD
 
 停止套件会把风扇交回驱动自动控制；卸载保留 `/etc/nvfd` 配置。
 
+## 关机安全
+
+- `nvfd.service` 设置 `TimeoutStopSec=15`，停止超时后 systemd 会 SIGKILL
+- 套件停止脚本使用 `systemctl stop --no-block nvfd`，不会让 DSM 关机流程一直等待
+- `ExecStopPost` 中的风扇恢复命令加了 5 秒超时
+- 正常停止时仍会先把风扇交回驱动
+
 ## 构建
 
 仓库已经包含编译好的 `package/bin/nvfd`，在 Linux 上直接打包：
@@ -154,7 +161,7 @@ sudo synopkg uninstall NVFD
 输出：
 
 ```text
-dist/NVFD-1.0.0-0016.spk
+dist/NVFD-1.0.0-0017.spk
 ```
 
 `build.sh` 需要 `python3` 和 GNU tar；不需要在 NAS 上安装编译器。

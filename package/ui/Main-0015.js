@@ -25,7 +25,7 @@ Ext.define('SYNO.SDS.NVFD.Main', {
             items: [
                 new Ext.BoxComponent({
                     height: '100%',
-                    html: '<iframe title="NVFD 显卡控制" src="/webman/3rdparty/NVFD/index.html?v=1.0.0-0016" frameborder="0" width="100%" height="100%" style="display:block;background:#0b1220"></iframe>'
+                    html: '<iframe title="NVFD 显卡控制" src="/webman/3rdparty/NVFD/index.html?v=1.0.0-0017" frameborder="0" width="100%" height="100%" style="display:block;background:#0b1220"></iframe>'
                 })
             ]
         }, cfg);

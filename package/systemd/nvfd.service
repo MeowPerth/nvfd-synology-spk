@@ -10,12 +10,13 @@ ExecStartPre=/bin/sh -c 'i=0; while [ ! -e /dev/nvidiactl ] && [ $i -lt 60 ]; do
 ExecStartPre=/var/packages/NVFD/target/bin/nvfd-clocks apply
 ExecStart=/var/packages/NVFD/target/bin/nvfd
 TimeoutStartSec=180
+TimeoutStopSec=15
 WatchdogSec=30
 Restart=on-failure
 RestartSec=5
 StartLimitInterval=60
 StartLimitBurst=5
-ExecStopPost=-/var/packages/NVFD/target/bin/nvfd reset-fans
+ExecStopPost=-/usr/bin/timeout 5 /var/packages/NVFD/target/bin/nvfd reset-fans
 
 [Install]
 WantedBy=multi-user.target

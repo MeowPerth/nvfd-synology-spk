@@ -34,7 +34,9 @@ case "$1" in
         run start nvfd
         ;;
     stop)
-        run stop nvfd
+        # Never block DSM shutdown on a stuck NVML call.  nvfd.service has
+        # TimeoutStopSec=15 so systemd SIGKILLs it if it does not stop.
+        run stop --no-block nvfd
         run disable nvfd >/dev/null 2>&1
         ;;
     status)
@@ -45,7 +47,7 @@ case "$1" in
         run restart nvfd
         ;;
     killall)
-        run stop nvfd
+        run stop --no-block nvfd
         ;;
     log)
         if [ -x "$SPM" ]; then

@@ -2,7 +2,7 @@
 SPM=/usr/local/bin/spm-exec
 if [ -x "$SPM" ]; then
     "$SPM" /bin/sh -c '
-        systemctl stop nvfd >/dev/null 2>&1 || true
+        timeout 20 systemctl stop nvfd >/dev/null 2>&1 || true
         systemctl disable nvfd >/dev/null 2>&1 || true
         rm -f /etc/systemd/system/nvfd.service
         systemctl daemon-reload

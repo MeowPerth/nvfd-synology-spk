@@ -1,6 +1,6 @@
 #!/bin/sh
 SPM=/usr/local/bin/spm-exec
 if [ -x "$SPM" ]; then
-    "$SPM" /bin/systemctl stop nvfd >/dev/null 2>&1 || true
+    "$SPM" /usr/bin/timeout 20 /bin/systemctl stop nvfd >/dev/null 2>&1 || true
 fi
 exit 0
