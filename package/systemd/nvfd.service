@@ -7,7 +7,7 @@ Type=notify
 # The NVIDIA driver may finish loading after multi-user.target on DSM; wait
 # for its control node instead of failing the first start and giving up.
 ExecStartPre=/bin/sh -c 'i=0; while [ ! -e /dev/nvidiactl ] && [ $i -lt 60 ]; do i=$((i+1)); sleep 2; done; test -e /dev/nvidiactl'
-ExecStartPre=/var/packages/NVFD/target/bin/nvfd-clocks apply
+ExecStartPre=/bin/sh -c 'i=0; while ! /var/packages/NVFD/target/bin/nvfd-clocks apply; do i=$((i+1)); [ "$i" -ge 60 ] && exit 1; sleep 2; done'
 ExecStart=/var/packages/NVFD/target/bin/nvfd
 TimeoutStartSec=180
 TimeoutStopSec=15

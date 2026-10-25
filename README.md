@@ -47,7 +47,7 @@
 
 ## 安装
 
-1. 从 [dist/NVFD-1.0.0-0017.spk](dist/NVFD-1.0.0-0017.spk) 下载 SPK。
+1. 从 [dist/NVFD-1.0.0-0018.spk](dist/NVFD-1.0.0-0018.spk) 下载 SPK。
 2. DSM **套件中心 → 手动安装**，选择这个文件。
 3. 本地自制包没有 Synology 官方签名；若提示“来源不受信任”，选择继续/允许。
 4. 安装后如果按钮是“启动”，点 **启动**。
@@ -58,7 +58,7 @@
 ### 升级后界面没有变化
 
 关闭 NVFD 窗口，刷新 DSM 页面（Windows/Linux 用 `Ctrl+F5`，macOS 用
-`Cmd+Shift+R`），再重新打开。1.0.0-0017 起使用版本化的 `Main-0015.js` 和
+`Cmd+Shift+R`），再重新打开。1.0.0-0018 起使用版本化的 `Main-0015.js` 和
 `index.html?v=...`，正常刷新后会加载新界面；界面页脚会显示版本号。
 
 ## 重要：SimplePermissionManager 授权
@@ -143,6 +143,15 @@ sudo synopkg uninstall NVFD
 
 停止套件会把风扇交回驱动自动控制；卸载保留 `/etc/nvfd` 配置。
 
+## 开机启动与修复提示
+
+`nvfd.service` 启动时会先等 `/dev/nvidiactl` 出现，再重试 `nvfd-clocks apply`，
+最多等待 120 秒，直到 NVML 真正可用。这样 DSM 在 NVIDIA 驱动还没初始化完时
+调用套件启动，不会因为 NVML 未就绪而直接失败、把套件标记成需要修复。
+
+套件启动脚本还会先执行 `systemctl reset-failed nvfd`，清除上次关机留下的
+failed 状态。
+
 ## 关机安全
 
 - `nvfd.service` 设置 `TimeoutStopSec=15`，停止超时后 systemd 会 SIGKILL
@@ -161,7 +170,7 @@ sudo synopkg uninstall NVFD
 输出：
 
 ```text
-dist/NVFD-1.0.0-0017.spk
+dist/NVFD-1.0.0-0018.spk
 ```
 
 `build.sh` 需要 `python3` 和 GNU tar；不需要在 NAS 上安装编译器。

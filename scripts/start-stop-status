@@ -30,6 +30,8 @@ ensure() {
 case "$1" in
     start)
         ensure || exit 1
+        # Clear a failed state left by a previous shutdown before starting.
+        run reset-failed nvfd >/dev/null 2>&1 || true
         run enable nvfd >/dev/null 2>&1
         run start nvfd
         ;;

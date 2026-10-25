@@ -1,5 +1,5 @@
 package="NVFD"
-version="1.0.0-0017"
+version="1.0.0-0018"
 displayname="NVFD 显卡控制"
 displayname_enu="NVFD GPU Control"
 displayname_cht="NVFD 顯卡控制"
