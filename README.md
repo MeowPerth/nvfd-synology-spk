@@ -8,7 +8,7 @@
 > **注意：** 调整风扇、核心/显存偏移、功耗上限均有风险，可能导致显卡不稳定、
 > 计算任务出错、驱动崩溃或硬件损坏，请谨慎操作、风险自负。
 >
-> **安装后必须**在群晖 `SimplePermissionManager` 中授权 `NVFD`，否则网页后端
+> **安装后必须**在群晖 `SimplePermissionManager` 中授权 `NVFDControl`，否则网页后端
 > 无法控制 GPU。详见下方“SimplePermissionManager 授权”一节。
 
 作者：**小H酱**
