@@ -7,8 +7,8 @@ Type=notify
 # The NVIDIA driver may finish loading after multi-user.target on DSM; wait
 # for its control node instead of failing the first start and giving up.
 ExecStartPre=/bin/sh -c 'i=0; while [ ! -e /dev/nvidiactl ] && [ $i -lt 60 ]; do i=$((i+1)); sleep 2; done; test -e /dev/nvidiactl'
-ExecStartPre=/bin/sh -c 'i=0; while ! /var/packages/NVFD/target/bin/nvfd-clocks apply; do i=$((i+1)); [ "$i" -ge 60 ] && exit 1; sleep 2; done'
-ExecStart=/var/packages/NVFD/target/bin/nvfd
+ExecStartPre=/bin/sh -c 'i=0; while ! /var/packages/NVFDControl/target/bin/nvfd-clocks apply; do i=$((i+1)); [ "$i" -ge 60 ] && exit 1; sleep 2; done'
+ExecStart=/var/packages/NVFDControl/target/bin/nvfd
 TimeoutStartSec=180
 TimeoutStopSec=15
 WatchdogSec=30
@@ -16,7 +16,7 @@ Restart=on-failure
 RestartSec=5
 StartLimitInterval=60
 StartLimitBurst=5
-ExecStopPost=-/usr/bin/timeout 5 /var/packages/NVFD/target/bin/nvfd reset-fans
+ExecStopPost=-/usr/bin/timeout 5 /var/packages/NVFDControl/target/bin/nvfd reset-fans
 
 [Install]
 WantedBy=multi-user.target

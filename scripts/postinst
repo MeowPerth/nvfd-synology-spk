@@ -7,7 +7,7 @@ fi
 
 "$SPM" /bin/sh -c '
     set -e
-    PKG=/var/packages/NVFD/target
+    PKG=/var/packages/NVFDControl/target
     mkdir -p /etc/nvfd
     [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
     [ -f /etc/nvfd/curve.json ] || cp "$PKG/etc/default_curve.json" /etc/nvfd/curve.json
@@ -20,7 +20,7 @@ rc=$?
 if [ $rc -ne 0 ]; then
     echo "NVFD service unit failed to install." >&2
     echo "Approve it and retry:" >&2
-    echo "  sudo /var/packages/NVFD/target/tools/approve-nvfd.sh" >&2
-    echo "  sudo synopkg start NVFD" >&2
+    echo "  sudo /var/packages/NVFDControl/target/tools/approve-nvfd.sh" >&2
+    echo "  sudo synopkg start NVFDControl" >&2
 fi
 exit 0

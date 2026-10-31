@@ -1,16 +1,17 @@
 {
-    "Main-0018.js": {
-        "SYNO.SDS.NVFD.Instance": {
+    "dsm-wrapper.js": {
+        "MeowPerth.NVFDControl.AppInstance": {
             "type": "app",
-            "version": "1.0.0-0018",
-            "desc": "NVFD 显卡风扇、频率与功耗控制 · 小H酱",
+            "version": "1.0.0-0019",
+            "desc": "NVFD 显卡风扇、频率与功耗控制",
             "icon": "images/icon_{0}.png",
             "title": "NVFD 显卡控制",
             "allowMultiInstance": false,
-            "appWindow": "SYNO.SDS.NVFD.Main",
-            "depend": []
+            "allUsers": false,
+            "appWindow": "MeowPerth.NVFDControl.AppWindow",
+            "depend": ["MeowPerth.NVFDControl.AppWindow"]
         },
-        "SYNO.SDS.NVFD.Main": {
+        "MeowPerth.NVFDControl.AppWindow": {
             "type": "lib",
             "title": "NVFD 显卡控制",
             "icon": "images/icon_{0}.png",

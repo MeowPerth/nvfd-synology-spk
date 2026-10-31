@@ -1,5 +1,5 @@
 #!/bin/sh
-# Package scripts run as the NVFD package user.  NVFD is approved in DSM's
+# Package scripts run as the NVFDControl package user.  NVFDControl is approved in DSM's
 # SimplePermissionManager, so spm-exec can perform the privileged steps.
 SPM=/usr/local/bin/spm-exec
 if [ -x "$SPM" ]; then

@@ -1,6 +1,6 @@
 #!/bin/sh
 SPM=/usr/local/bin/spm-exec
-PKG=/var/packages/NVFD/target
+PKG=/var/packages/NVFDControl/target
 run() {
     if [ -x "$SPM" ]; then
         "$SPM" /bin/systemctl "$@"
@@ -9,14 +9,14 @@ run() {
     fi
 }
 
-# A fresh install may run before SimplePermissionManager has approved NVFD.
-# After the admin approves it, "synopkg start NVFD" repairs the unit/config.
+# A fresh install may run before SimplePermissionManager has approved NVFDControl.
+# After the admin approves it, "synopkg start NVFDControl" repairs the unit/config.
 ensure() {
     [ -f /etc/systemd/system/nvfd.service ] && [ -f /etc/nvfd/config.json ] && return 0
     [ -x "$SPM" ] || return 1
     "$SPM" /bin/sh -c '
         set -e
-        PKG=/var/packages/NVFD/target
+        PKG=/var/packages/NVFDControl/target
         mkdir -p /etc/nvfd
         [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
         [ -f /etc/nvfd/curve.json ] || cp "$PKG/etc/default_curve.json" /etc/nvfd/curve.json

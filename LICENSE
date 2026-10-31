@@ -5,17 +5,17 @@
    核心/显存偏移的输入范围会实时读取显卡驱动报告，并换算成实际 MHz；显存内部
    再换算为 NVML 的 MT/s 偏移。具体范围由显卡/驱动决定。
 
-2. 安装本套件后，需要在群晖 SimplePermissionManager 中授权 NVFD，套件才能通过
+2. 安装本套件后，需要在群晖 SimplePermissionManager 中授权 NVFDControl，套件才能通过
    spm-exec 以 root 调用风扇/频率后端。若套件启动失败或界面报
    "backend execution failed"，请执行：
-       sudo /var/packages/NVFD/target/tools/approve-nvfd.sh
-       sudo synopkg start NVFD
+       sudo /var/packages/NVFDControl/target/tools/approve-nvfd.sh
+       sudo synopkg start NVFDControl
    详见 README：
-       https://github.com/MeowPerth/nvfd-synology-spk
+       https://github.com/MeowPerth/NVFDControl-DSM
 
 WARNING: Adjusting GPU fans, clocks, memory offsets or power limits can make the
 GPU unstable, corrupt compute jobs, crash the driver or damage hardware. Use at
-your own risk. After installation, NVFD must be authorized in Synology
+your own risk. After installation, NVFDControl must be authorized in Synology
 SimplePermissionManager before the web UI can control the GPU.
 
 MIT License

@@ -26,7 +26,7 @@ chmod 755 package/bin/nvfd package/bin/nvfd-clocks package/bin/backend.py \
           package/ui/api.cgi package/tools/*.sh
 chmod 755 conf scripts
 chmod 644 INFO LICENSE NOTICE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG \
-          conf/privilege package/ui/index.html package/ui/config package/ui/Main.js \
+          conf/privilege package/ui/index.html package/ui/config package/ui/dsm-wrapper.js \
           package/systemd/*.service package/etc/*.json
 chmod 755 scripts/preinst scripts/postinst scripts/preuninst \
           scripts/postuninst scripts/preupgrade scripts/postupgrade \
@@ -38,7 +38,7 @@ tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -cz
 chmod 644 package.tgz
 
 mkdir -p dist
-SPK="dist/NVFD-$VERSION.spk"
+SPK="dist/NVFDControl-$VERSION.spk"
 rm -f "$SPK"
 tar --sort=name --mtime='UTC 2020-01-01' --owner=0 --group=0 --numeric-owner -cf "$SPK" \
     INFO LICENSE PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG conf package.tgz scripts

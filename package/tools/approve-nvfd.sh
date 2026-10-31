@@ -21,25 +21,25 @@ path = "/var/packages/SimplePermissionManager/etc/permissions.json"
 with open(path) as f:
     data = json.load(f)
 
-user = pwd.getpwnam("NVFD")
+user = pwd.getpwnam("NVFDControl")
 entry = {
-    "name": "NVFD",
+    "name": "NVFDControl",
     "uid": user.pw_uid,
     "gid": user.pw_gid,
-    "package": "NVFD",
+    "package": "NVFDControl",
     "enabled": True,
 }
-data.setdefault("users", {})["NVFD"] = {
-    "name": "NVFD", "uid": user.pw_uid, "gid": user.pw_gid, "enabled": True
+data.setdefault("users", {})["NVFDControl"] = {
+    "name": "NVFDControl", "uid": user.pw_uid, "gid": user.pw_gid, "enabled": True
 }
-data.setdefault("packages", {})["NVFD"] = entry
+data.setdefault("packages", {})["NVFDControl"] = entry
 with open(path, "w") as f:
     json.dump(data, f, indent=4)
 PY
 chmod 755 "$PERM"
-echo "NVFD approved."
+echo "NVFDControl approved."
 
-PKG=/var/packages/NVFD/target
+PKG=/var/packages/NVFDControl/target
 if [ -f "$PKG/systemd/nvfd.service" ]; then
     mkdir -p /etc/nvfd
     [ -f /etc/nvfd/config.json ] || cp "$PKG/etc/default_config.json" /etc/nvfd/config.json
@@ -50,5 +50,5 @@ if [ -f "$PKG/systemd/nvfd.service" ]; then
     systemctl daemon-reload
     systemctl enable nvfd >/dev/null 2>&1
     systemctl restart nvfd
-    echo "NVFD service installed and started."
+    echo "NVFDControl service installed and started."
 fi

@@ -7,226 +7,216 @@
 <title>NVFD 显卡控制</title>
 <style>
 :root{
-  --bg:#0b1220;--panel:#111c2e;--panel2:#16243a;--line:#24364f;
-  --text:#e6eefc;--muted:#8aa0bd;--accent:#38bdf8;--accent2:#0ea5e9;
-  --green:#34d399;--orange:#f59e0b;--red:#f87171;--purple:#a78bfa;
+  --bg:#f2f4f7;--card:#ffffff;--text:#1b2430;--muted:#6b7686;--line:#e3e7ee;
+  --accent:#2377ef;--accent-weak:#e8f1fe;--ok:#1fa45b;--warn:#e07b00;--err:#d84343;
+  --track:#e9edf3;--shadow:0 1px 2px rgba(16,24,40,.04);
+  --mono:"SF Mono",Consolas,"Liberation Mono",Menlo,monospace;
 }
-*{box-sizing:border-box;margin:0;padding:0}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#16181d;--card:#1f2229;--text:#e8eaf0;--muted:#9aa3b2;--line:#2c313b;
+    --accent:#4b8ef7;--accent-weak:#243044;--ok:#37b96f;--warn:#f09b3c;--err:#ef6b6b;
+    --track:#2a303a;--shadow:none}
+}
+*{box-sizing:border-box}
 html,body{min-height:100%}
-body{
-  background:radial-gradient(1200px 600px at 10% -10%,#12304f 0,transparent 55%),
-             radial-gradient(900px 500px at 100% 0,#1b1b3a 0,transparent 50%),var(--bg);
-  color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
-  "Noto Sans SC","Microsoft YaHei",sans-serif;font-size:14px;line-height:1.5;
-}
-button,input{font:inherit}
-button{cursor:pointer}
-.hdr{
-  position:sticky;top:0;z-index:20;display:flex;align-items:center;
-  justify-content:space-between;gap:16px;padding:12px 22px;
-  background:rgba(11,18,32,.86);backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);
-}
-.brand{display:flex;align-items:center;gap:12px}
-.logo{
-  width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
-  background:linear-gradient(145deg,#0c4a6e,#0f172a);border:1px solid #1e6a8a;
-  box-shadow:0 0 24px rgba(56,189,248,.18);
-}
-.brand h1{font-size:17px;letter-spacing:.3px}
-.brand p{font-size:12px;color:var(--muted)}
-.hdr-right{display:flex;align-items:center;gap:10px}
-.badge{
-  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
-  font-size:12px;border:1px solid var(--line);color:var(--muted);background:var(--panel);
-}
-.badge .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
-.badge.ok{color:var(--green);border-color:#14533f;background:#0c2a22}
-.badge.ok .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
-.badge.bad{color:var(--red);border-color:#5b2020;background:#2a0f12}
-.badge.bad .dot{background:var(--red)}
-.btn{
-  border:1px solid var(--line);background:var(--panel2);color:var(--text);
-  padding:7px 12px;border-radius:9px;transition:.15s;white-space:nowrap;
-}
-.btn:hover{border-color:var(--accent);color:#fff}
-.btn.primary{background:linear-gradient(135deg,#0284c7,#0ea5e9);border-color:#38bdf8;color:#fff}
-.btn.primary:hover{filter:brightness(1.08)}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:14px/1.55 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,sans-serif;}
+.wrap{max-width:1120px;margin:0 auto;padding:20px 18px 30px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:2px;flex:none}
+.brand-text h1{font-size:20px;line-height:1.2;margin:0;letter-spacing:.2px}
+.brand-text p{font-size:12px;color:var(--muted);margin:2px 0 0}
+.top-right{display:flex;align-items:center;gap:10px}
+.version{font:11px var(--mono);color:var(--muted)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;
+  background:var(--accent-weak);color:var(--accent);font-size:12px;white-space:nowrap}
+.badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.badge.ok{background:rgba(31,164,91,.14);color:var(--ok)}
+.badge.bad{background:rgba(216,67,67,.14);color:var(--err)}
+.badge small{font-size:11px}
+.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--text);
+  padding:7px 14px;border-radius:8px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.08);color:#fff}
 .btn.ghost{background:transparent}
-.btn.danger{color:#fecaca;border-color:#5b2020;background:#2a0f12}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.main{max-width:1280px;margin:0 auto;padding:18px 22px 40px}
-.toolbar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  margin-bottom:14px;flex-wrap:wrap;
-}
-.toolbar .group{display:flex;gap:8px;flex-wrap:wrap}
-.alert{
-  display:none;margin-bottom:14px;padding:10px 13px;border-radius:10px;
-  border:1px solid #5b3a12;background:#2a1c09;color:#fcd34d;font-size:13px;
-}
+.btn.danger{color:var(--err);border-color:var(--err)}
+.btn:disabled{opacity:.5;cursor:default;pointer-events:none}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:0 0 16px}
+.tab{background:none;border:0;border-bottom:2px solid transparent;border-radius:0;
+  padding:8px 16px;margin-bottom:-1px;color:var(--muted);font:inherit;cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.panel{display:none}
+.panel.active{display:block}
+.alert{display:none;margin:0 0 14px;padding:9px 12px;border-radius:8px;
+  background:#fff8e6;border:1px solid #f0d49a;color:#8a5a00;font-size:13px}
 .alert.show{display:block}
-.alert.danger{border-color:#5b2020;background:#2a0f12;color:#fecaca}
+.alert.danger{background:#fdecec;border-color:#f0b4b4;color:#a12b2b}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-bottom:14px;flex-wrap:wrap}
+.toolbar .group{display:flex;gap:8px;flex-wrap:wrap}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.card{
-  background:linear-gradient(160deg,rgba(22,36,58,.96),rgba(15,26,43,.96));
-  border:1px solid var(--line);border-radius:14px;padding:15px;
-  box-shadow:0 12px 30px rgba(0,0,0,.22);
-}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:15px;box-shadow:var(--shadow)}
 .gpu-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.gpu-head h2{font-size:16px;display:flex;align-items:center;gap:7px}
+.gpu-head h2{font-size:16px;margin:0;display:flex;align-items:center;gap:7px}
 .gpu-head .name{font-size:12px;color:var(--muted);margin-top:2px}
 .mode-badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
-.mode-badge.curve{color:var(--purple);border-color:#4c3a78;background:#211a35}
-.mode-badge.manual{color:var(--accent);border-color:#0e5e7a;background:#082a38}
-.mode-badge.auto{color:var(--green);border-color:#14533f;background:#0c2a22}
-.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:13px 0 12px}
-.metric{background:rgba(9,16,28,.55);border:1px solid rgba(36,54,79,.8);border-radius:10px;padding:8px 9px}
+.mode-badge.curve{color:#7b5bd6;border-color:#d8ccfb;background:#f3efff}
+.mode-badge.manual{color:var(--accent);border-color:#c7dbfb;background:var(--accent-weak)}
+.mode-badge.auto{color:var(--ok);border-color:#bfe8d1;background:rgba(31,164,91,.10)}
+@media (prefers-color-scheme:dark){
+  .mode-badge.curve{color:#c4b5fd;border-color:#4c3a78;background:#2a2340}
+  .mode-badge.manual{color:#93c5fd;border-color:#1e4f8a;background:#172b45}
+  .mode-badge.auto{color:#6ee7b7;border-color:#14533f;background:#0c2a22}
+}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.metric{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 9px}
 .metric span{display:block;font-size:11px;color:var(--muted)}
-.metric strong{display:block;font-size:19px;font-weight:650;margin-top:1px}
-.metric strong em{font-style:normal;font-size:11px;color:var(--muted);font-weight:500;margin-left:2px}
+.metric strong{display:block;font-size:18px;font-weight:650;margin-top:1px;white-space:nowrap}
+.metric strong em{font-style:normal;font-size:10px;color:var(--muted);font-weight:500;margin-left:2px}
 .fan-block{margin:6px 0 10px}
 .fan-label{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px}
 .fan-label b{color:var(--text);font-size:13px}
 .fan-label em{font-style:normal;color:var(--muted);font-size:11px;margin-left:5px}
-.fan-bar{position:relative;height:9px;border-radius:999px;background:#0a1424;overflow:hidden;border:1px solid #1c2c44}
-.fan-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#0ea5e9,#22d3ee);transition:width .35s ease}
-.fan-target{position:absolute;top:-3px;bottom:-3px;width:2px;background:#e2e8f0;opacity:.8}
+.fan-bar{position:relative;height:8px;border-radius:999px;background:var(--track);overflow:hidden;border:0}
+.fan-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),#4aa3ff);transition:width .35s ease}
+.fan-target{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--text);opacity:.35}
 .fan-channels{font-size:11px;color:var(--muted);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap}
-.fan-channels .zero{color:var(--orange)}
-.segmented{display:flex;gap:6px;background:#0a1424;border:1px solid var(--line);padding:4px;border-radius:10px}
-.segmented button{
-  flex:1;border:0;background:transparent;color:var(--muted);padding:7px 6px;border-radius:7px;font-size:12px;
-}
+.fan-channels .zero{color:var(--warn)}
+.segmented{display:flex;gap:3px;background:var(--bg);border:1px solid var(--line);padding:3px;border-radius:8px}
+.segmented button{flex:1;border:0;background:transparent;color:var(--muted);padding:7px 6px;border-radius:6px;font:inherit;font-size:12px;cursor:pointer}
 .segmented button:hover{color:var(--text)}
-.segmented button.active{background:var(--panel2);color:#fff;box-shadow:0 0 0 1px #2c4a6b inset}
+.segmented button.active{background:var(--card);color:var(--accent);box-shadow:0 0 0 1px var(--line)}
 .manual-row{display:none;align-items:center;gap:9px;margin-top:9px}
 .manual-row.show{display:flex}
 .manual-row input[type=range]{flex:1;accent-color:var(--accent)}
 .manual-val{font-variant-numeric:tabular-nums;min-width:42px;text-align:right;color:var(--accent);font-weight:650}
-.sub-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid rgba(36,54,79,.65)}
+.sub-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
 .sub-row label{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
-.sub-row input[type=number]{
-  width:76px;padding:5px 7px;border-radius:7px;border:1px solid var(--line);
-  background:#0a1424;color:var(--text);font-variant-numeric:tabular-nums;
-}
+.sub-row input[type=number]{width:78px;padding:5px 7px;border-radius:6px;border:1px solid var(--line);
+  background:var(--bg);color:var(--text);font-variant-numeric:tabular-nums}
 .sub-row input[type=number]:focus{outline:none;border-color:var(--accent)}
 .sub-row .spacer{flex:1}
-.curve-card{margin-top:14px}
-.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.section-head h2{font-size:15px}
-.section-head .group{display:flex;gap:8px;flex-wrap:wrap}
-.curve-wrap{background:#091322;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:10px}
-#curveChart{width:100%;height:220px;display:block}
-.curve-editor{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
-
-.curve-item{display:flex;align-items:center;gap:6px;background:#0a1424;border:1px solid var(--line);border-radius:9px;padding:6px 7px}
-.curve-item input{width:58px;padding:4px 5px;border-radius:6px;border:1px solid var(--line);background:#07101d;color:var(--text);text-align:right}
-.curve-item .unit{font-size:11px;color:var(--muted)}
-.curve-item .del{border:0;background:transparent;color:var(--muted);padding:2px 4px;font-size:16px}
-.curve-item .del:hover{color:var(--red)}
-.note{font-size:12px;color:var(--muted);margin-top:9px}
-.notes{margin-top:14px}
-.notes h2{font-size:15px;margin-bottom:7px}
-.notes ul{padding-left:18px;color:var(--muted);font-size:12.5px}
-.notes li{margin:4px 0}
-.notes code{background:#0a1424;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#bae6fd}
-.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
-.foot a{color:var(--accent);text-decoration:none}
-.foot a:hover{text-decoration:underline}
-.sub-row.offset-row{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;align-items:center}
+.sub-row.offset-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:center}
 .sub-row.offset-row label{min-width:0}
 .sub-row.offset-row .apply-offsets{grid-column:1;grid-row:2;justify-self:center;min-width:120px}
 .sub-row.offset-row .reset-offsets{grid-column:2;grid-row:2;justify-self:center;min-width:120px}
-.toast{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
-  background:#0f2537;border:1px solid #1e6a8a;color:#e0f2fe;padding:9px 15px;
-  border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.35);opacity:0;
-  pointer-events:none;transition:.22s;z-index:50;max-width:80vw;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.err{border-color:#7f1d1d;background:#2a0f12;color:#fecaca}
-.warn-text{color:var(--orange);font-size:11px}
+.curve-card{margin-top:0}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.section-head h2{font-size:15px;margin:0}
+.section-head .group{display:flex;gap:8px;flex-wrap:wrap}
+.curve-wrap{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px;margin-bottom:10px}
+#curveChart{width:100%;height:230px;display:block}
+.chart-bg{fill:var(--bg)}
+.chart-grid{stroke:var(--line)}
+.chart-label{fill:var(--muted)}
+.chart-line{stroke:var(--accent)}
+.chart-point{fill:var(--card);stroke:var(--accent)}
+.curve-editor{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.curve-item{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:6px 7px}
+.curve-item input{width:58px;padding:4px 5px;border-radius:6px;border:1px solid var(--line);background:var(--card);color:var(--text);text-align:right}
+.curve-item .unit{font-size:11px;color:var(--muted)}
+.curve-item .del{border:0;background:transparent;color:var(--muted);padding:2px 4px;font-size:16px;cursor:pointer}
+.curve-item .del:hover{color:var(--err)}
+.note{font-size:12px;color:var(--muted);margin-top:9px}
+.notes{margin-top:14px}
+.notes h2{font-size:13px;margin:0 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.notes ul{padding-left:18px;color:var(--muted);font-size:12.5px;margin:0}
+.notes li{margin:4px 0}
+.notes code{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:1px 5px;color:var(--accent);font-family:var(--mono);font-size:11px}
+.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:18px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);
+  background:var(--text);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;
+  opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:80vw}
+.toast.show{opacity:.96;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--err);color:#fff}
+.warn-text{color:var(--warn);font-size:11px}
+.hidden{display:none!important}
 @media(max-width:900px){
   .grid{grid-template-columns:1fr}
   .metrics{grid-template-columns:repeat(2,1fr)}
-  .hdr{padding:10px 14px}
-  .main{padding:14px}
-  .brand p{display:none}
+  .wrap{padding:14px}
+  .brand-text p{display:none}
 }
+
 </style>
 </head>
 <body>
-<header class="hdr">
-  <div class="brand">
-    <div class="logo">
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.7" stroke-linecap="round">
-        <rect x="4" y="5" width="16" height="14" rx="3"/>
-        <circle cx="12" cy="12" r="4.2"/>
-        <path d="M12 8.2c1.8 0 3 1.4 3 2.8M12 15.8c-1.8 0-3-1.4-3-2.8M8.2 12c0-1.8 1.4-3 2.8-3M15.8 12c0 1.8-1.4 3-2.8 3"/>
-        <path d="M7 2v3M17 2v3M7 19v3M17 19v3"/>
-      </svg>
+<main class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img class="logo" src="images/icon_48.png" alt="">
+      <div class="brand-text">
+        <h1>NVFD 显卡控制</h1>
+        <p>NVIDIA 风扇、核心/显存偏移与功耗</p>
+      </div>
+      <span class="badge" id="serviceBadge"><i class="dot"></i><span id="serviceText">检查中</span></span>
     </div>
-    <div>
-      <h1>NVFD 显卡控制</h1>
-      <p>NVIDIA 风扇、核心/显存偏移与功耗 · by 小H酱</p>
+    <div class="top-right">
+      <span class="version">NVFDControl · v1.0.0-0019</span>
+      <button class="btn primary" id="refreshBtn">刷新</button>
     </div>
-  </div>
-  <div class="hdr-right">
-    <span class="badge" id="serviceBadge"><i class="dot"></i><span id="serviceText">检查中</span></span>
-    <button class="btn" id="refreshBtn">刷新</button>
-  </div>
-</header>
+  </header>
 
-<main class="main">
+  <div class="tabs">
+    <button class="tab active" data-tab="status">状态</button>
+    <button class="tab" data-tab="curves">风扇曲线</button>
+  </div>
+
   <div class="alert" id="alertBox"></div>
 
-  <div class="toolbar">
-    <div class="group">
-      <button class="btn" data-allmode="auto">全部自动</button>
-      <button class="btn" data-allmode="curve">全部曲线</button>
-      <button class="btn ghost" id="restartBtn">重启风扇服务</button>
-    </div>
-    <div class="group">
+  <section class="panel active" id="panel-status">
+    <div class="toolbar">
+      <div class="group">
+        <button class="btn" data-allmode="auto">全部自动</button>
+        <button class="btn" data-allmode="curve">全部曲线</button>
+        <button class="btn ghost" id="restartBtn">重启风扇服务</button>
+      </div>
       <span class="badge" id="lastUpdate"><i class="dot"></i>等待数据</span>
     </div>
-  </div>
 
-  <div class="grid" id="gpuGrid"></div>
+    <div class="grid" id="gpuGrid"></div>
 
-  <section class="card curve-card">
-    <div class="section-head">
-      <h2>风扇曲线</h2>
-      <div class="group">
-        <button class="btn ghost" id="addPointBtn">添加点</button>
-        <button class="btn" id="saveCurveBtn">保存曲线</button>
-        <button class="btn primary" id="saveCurveAllBtn">保存并全部使用</button>
+    <section class="card notes">
+      <h2>说明</h2>
+      <ul>
+        <li>风扇最低 30%，最高 100%。手动模式会忽略温度，但 NVFD 的 86 °C 失效保护仍会强制全速。</li>
+        <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。</li>
+        <li>核心和显存输入范围都会实时读取显卡驱动报告。显存按<b>实际时钟 MHz</b>输入，内部自动换算为 NVML 的 MT/s 偏移。</li>
+        <li>正偏移属于超频，可能让正在运行的计算任务出错；建议从小数值开始测试。</li>
+        <li>功耗上限修改后立即生效，但重启后会恢复默认；偏移和风扇模式会保留。</li>
+        <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
+      </ul>
+    </section>
+  </section>
+
+  <section class="panel" id="panel-curves">
+    <section class="card curve-card">
+      <div class="section-head">
+        <h2>风扇曲线</h2>
+        <div class="group">
+          <button class="btn ghost" id="addPointBtn">添加点</button>
+          <button class="btn" id="saveCurveBtn">保存曲线</button>
+          <button class="btn primary" id="saveCurveAllBtn">保存并全部使用</button>
+        </div>
       </div>
-    </div>
-    <div class="curve-wrap">
-      <svg id="curveChart" viewBox="0 0 640 220" preserveAspectRatio="none" aria-label="风扇曲线图"></svg>
-    </div>
-    <div class="curve-editor" id="curveEditor"></div>
-    <p class="note">曲线必须随温度升高不下降。保存后 NVFD 约 5 秒内生效；只有“曲线”模式的 GPU 会使用它。</p>
+      <div class="curve-wrap">
+        <svg id="curveChart" viewBox="0 0 640 220" preserveAspectRatio="none" aria-label="风扇曲线图"></svg>
+      </div>
+      <div class="curve-editor" id="curveEditor"></div>
+      <p class="note">曲线必须随温度升高不下降。保存后 NVFD 约 5 秒内生效；只有“曲线”模式的 GPU 会使用它。</p>
+    </section>
   </section>
 
-  <section class="card notes">
-    <h2>说明</h2>
-    <ul>
-      <li>风扇最低 30%，最高 100%。手动模式会忽略温度，但 NVFD 的 86 °C 失效保护仍会强制全速。</li>
-      <li>核心/显存偏移通过 NVML VF 接口应用，写入 <code>/etc/nvfd/clocks.json</code>，开机由服务自动恢复。</li>
-      <li>核心和显存输入范围都会实时读取显卡驱动报告。显存按<b>实际时钟 MHz</b>输入，内部自动换算为 NVML 的 MT/s 偏移。</li>
-      <li>正偏移属于超频，可能让正在运行的计算任务出错；建议从小数值开始测试。</li>
-      <li>功耗上限修改后立即生效，但重启后会恢复默认；偏移和风扇模式会保留。</li>
-      <li>如果某个风扇“目标”大于 0 而“实际”为 0，通常是风扇未接、测速线未接或风扇损坏。</li>
-    </ul>
-  </section>
-  <footer class="foot">NVFD 显卡控制 · v1.0.0-0018 · by 小H酱 · <a href="https://github.com/MeowPerth/nvfd-synology-spk" target="_blank" rel="noopener">GitHub</a></footer>
+  <footer class="foot">NVFD 显卡控制 · NVFDControl · by 小H酱</footer>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script>
+
 (function () {
   "use strict";
 
@@ -476,21 +466,21 @@ button{cursor:pointer}
     var x = function (t) { return L + (Math.max(0, Math.min(100, t)) / 100) * (W - L - R); };
     var y = function (s) { return H - B - (Math.max(0, Math.min(100, s)) / 100) * (H - T - B); };
     var svg = [];
-    svg.push('<rect x="' + L + '" y="' + T + '" width="' + (W-L-R) + '" height="' + (H-T-B) + '" fill="#0b1626" stroke="#1c2c44"/>');
+    svg.push('<rect x="' + L + '" y="' + T + '" width="' + (W-L-R) + '" height="' + (H-T-B) + '" class="chart-bg"/>');
     for (var i = 0; i <= 4; i++) {
       var gy = T + i * (H - T - B) / 4;
-      svg.push('<line x1="' + L + '" y1="' + gy + '" x2="' + (W-R) + '" y2="' + gy + '" stroke="#17263b" stroke-width="1"/>');
-      svg.push('<text x="' + (L-7) + '" y="' + (gy+4) + '" fill="#7d93b2" font-size="10" text-anchor="end">' + (100 - i*25) + '%</text>');
+      svg.push('<line x1="' + L + '" y1="' + gy + '" x2="' + (W-R) + '" y2="' + gy + '" class="chart-grid" stroke-width="1"/>');
+      svg.push('<text x="' + (L-7) + '" y="' + (gy+4) + '" class="chart-label" font-size="10" text-anchor="end">' + (100 - i*25) + '%</text>');
     }
     for (var j = 0; j <= 5; j++) {
       var gx = L + j * (W - L - R) / 5;
-      svg.push('<line x1="' + gx + '" y1="' + T + '" x2="' + gx + '" y2="' + (H-B) + '" stroke="#17263b" stroke-width="1"/>');
-      svg.push('<text x="' + gx + '" y="' + (H-8) + '" fill="#7d93b2" font-size="10" text-anchor="middle">' + (j*20) + '°C</text>');
+      svg.push('<line x1="' + gx + '" y1="' + T + '" x2="' + gx + '" y2="' + (H-B) + '" class="chart-grid" stroke-width="1"/>');
+      svg.push('<text x="' + gx + '" y="' + (H-8) + '" class="chart-label" font-size="10" text-anchor="middle">' + (j*20) + '°C</text>');
     }
     var pts = rows.map(function (p) { return x(p.t) + "," + y(p.s); }).join(" ");
-    svg.push('<polyline points="' + pts + '" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');
+    svg.push('<polyline points="' + pts + '" class="chart-line" fill="none" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>');
     rows.forEach(function (p) {
-      svg.push('<circle cx="' + x(p.t) + '" cy="' + y(p.s) + '" r="4" fill="#0b1220" stroke="#67e8f9" stroke-width="2"/>');
+      svg.push('<circle cx="' + x(p.t) + '" cy="' + y(p.s) + '" r="4" class="chart-point" stroke-width="2"/>');
     });
     $("#curveChart").innerHTML = svg.join("");
   }
@@ -648,6 +638,16 @@ button{cursor:pointer}
 
   $("#saveCurveBtn").addEventListener("click", function () { saveCurve(false); });
   $("#saveCurveAllBtn").addEventListener("click", function () { saveCurve(true); });
+
+  $$(".tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      $$(".tab").forEach(function (t) { t.classList.remove("active"); });
+      tab.classList.add("active");
+      var name = tab.getAttribute("data-tab");
+      $$(".panel").forEach(function (p) { p.classList.toggle("active", p.id === "panel-" + name); });
+      if (name === "curves") drawCurve();
+    });
+  });
 
   refresh(true);
   state.pollTimer = setInterval(function () {

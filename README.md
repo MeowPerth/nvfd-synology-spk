@@ -1,4 +1,4 @@
-# NVFD for Synology DSM
+# NVFDControl for Synology DSM
 
 [![Platform](https://img.shields.io/badge/platform-DSM%207.2%2B%20x86__64-0ea5e9)](#平台)
 [![License](https://img.shields.io/badge/license-MIT-22c55e)](LICENSE)
@@ -12,13 +12,15 @@
 > 无法控制 GPU。详见下方“SimplePermissionManager 授权”一节。
 
 作者：**小H酱**
-项目地址：**https://github.com/MeowPerth/nvfd-synology-spk**
+项目地址：**https://github.com/MeowPerth/NVFDControl-DSM**
 
-**下载：** [GitHub Releases](https://github.com/MeowPerth/nvfd-synology-spk/releases/latest)
+**下载：** [GitHub Releases](https://github.com/MeowPerth/NVFDControl-DSM/releases/latest)
 
-![NVFD 界面](docs/ui-preview.png)
+| 状态页 | 风扇曲线 |
+|---|---|
+| ![状态页](docs/ui-preview.png) | ![风扇曲线](docs/ui-curves-preview.png) |
 
-> 上图使用模拟数据渲染；实际界面会显示你的显卡温度、风扇和频率。
+> 上图为模拟数据渲染；实际界面会显示你的显卡温度、风扇和频率。
 
 ## 功能
 
@@ -47,43 +49,43 @@
 
 ## 安装
 
-1. 从 [dist/NVFD-1.0.0-0018.spk](dist/NVFD-1.0.0-0018.spk) 下载 SPK。
+1. 从 [dist/NVFDControl-1.0.0-0019.spk](dist/NVFDControl-1.0.0-0019.spk) 下载 SPK。
 2. DSM **套件中心 → 手动安装**，选择这个文件。
 3. 本地自制包没有 Synology 官方签名；若提示“来源不受信任”，选择继续/允许。
 4. 安装后如果按钮是“启动”，点 **启动**。
-5. 从 **DSM 主菜单 → NVFD 显卡控制**，或 **套件中心 → NVFD → 打开**。
+5. 从 **DSM 主菜单 → NVFD 显卡控制**，或 **套件中心 → NVFDControl → 打开**。
 
 如果主菜单没有立即出现图标，刷新 DSM 页面或重新登录。
 
 ### 升级后界面没有变化
 
 关闭 NVFD 窗口，刷新 DSM 页面（Windows/Linux 用 `Ctrl+F5`，macOS 用
-`Cmd+Shift+R`），再重新打开。1.0.0-0018 起使用版本化的 `Main-0015.js` 和
+`Cmd+Shift+R`），再重新打开。1.0.0-0019 起使用版本化的 `Main-0015.js` 和
 `index.html?v=...`，正常刷新后会加载新界面；界面页脚会显示版本号。
 
 ## 重要：SimplePermissionManager 授权
 
 DSM 7 的第三方套件网页默认以普通用户运行，不能直接操作 GPU。本套件通过 DSM
-自带的 `spm-exec` 调用 root 后端，因此需要把 `NVFD` 加入
+自带的 `spm-exec` 调用 root 后端，因此需要把 `NVFDControl` 加入
 `SimplePermissionManager` 的允许列表。
 
 正常安装且已授权时，安装脚本会自动完成。以下情况需要手动修复：
 
 - 第一次在另一台 NAS 上安装
-- 重装套件后 `NVFD` 用户 UID 变化
+- 重装套件后 `NVFDControl` 用户 UID 变化
 - 更新了 SimplePermissionManager
 - 界面报 `backend execution failed`，或套件启动失败
 
 修复命令：
 
 ```bash
-sudo /var/packages/NVFD/target/tools/approve-nvfd.sh
-sudo synopkg start NVFD
+sudo /var/packages/NVFDControl/target/tools/approve-nvfd.sh
+sudo synopkg start NVFDControl
 ```
 
 脚本会：
 
-1. 按当前 `NVFD` 用户的 UID/GID 写入
+1. 按当前 `NVFDControl` 用户的 UID/GID 写入
    `/var/packages/SimplePermissionManager/etc/permissions.json`
 2. 备份原文件为 `permissions.json.bak.nvfd`
 3. 安装 `nvfd.service`、补齐 `/etc/nvfd` 默认配置并启动服务
@@ -135,10 +137,10 @@ sudo nvfd-clocks reset
 ## 套件管理
 
 ```bash
-sudo synopkg status NVFD
-sudo synopkg start NVFD
-sudo synopkg stop NVFD
-sudo synopkg uninstall NVFD
+sudo synopkg status NVFDControl
+sudo synopkg start NVFDControl
+sudo synopkg stop NVFDControl
+sudo synopkg uninstall NVFDControl
 ```
 
 停止套件会把风扇交回驱动自动控制；卸载保留 `/etc/nvfd` 配置。
@@ -170,7 +172,7 @@ failed 状态。
 输出：
 
 ```text
-dist/NVFD-1.0.0-0018.spk
+dist/NVFDControl-1.0.0-0019.spk
 ```
 
 `build.sh` 需要 `python3` 和 GNU tar；不需要在 NAS 上安装编译器。

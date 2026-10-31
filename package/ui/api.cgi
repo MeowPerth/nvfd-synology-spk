@@ -1,9 +1,9 @@
 #!/bin/sh
-# CGI bridge between the DSM-hosted UI (running as the NVFD package user) and
-# the root backend.  spm-exec is DSM's SimplePermissionManager helper; NVFD is
+# CGI bridge between the DSM-hosted UI (running as the NVFDControl package user) and
+# the root backend.  spm-exec is DSM's SimplePermissionManager helper; NVFDControl is
 # approved in this NAS's permissions.json, so this runs the backend as root.
 
-BASE="/var/packages/NVFD/target"
+BASE="/var/packages/NVFDControl/target"
 BACKEND="$BASE/bin/backend.py"
 SPM_EXEC="/usr/local/bin/spm-exec"
 QUERY_STRING="${QUERY_STRING:-}"
